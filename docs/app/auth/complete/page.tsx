@@ -4,12 +4,26 @@ import { useEffect, Suspense } from "react";
 
 function AuthCompleteContent() {
   useEffect(() => {
-    // Get the raw search string from the URL
-    const searchString = window.location.search;
+    // Debug logging
+    console.log("Current URL:", window.location.href);
+    console.log("Search string:", window.location.search);
+    console.log("Hash:", window.location.hash);
 
-    // Construct the redirect URL with the raw search string
-    const redirectUrl = `atprotobackups://auth${searchString}`;
-    console.log("Redirecting to:", redirectUrl); // Debug log
+    // Get all parameters from the URL
+    const currentUrl = new URL(window.location.href);
+    const params = new URLSearchParams(currentUrl.search);
+
+    // Debug log all parameters
+    console.log("All parameters:");
+    params.forEach((value, key) => {
+      console.log(key, "=", value);
+    });
+
+    // Construct the redirect URL preserving all parameters
+    const redirectUrl = `atprotobackups://auth${
+      currentUrl.search || "?" + currentUrl.hash.slice(1)
+    }`;
+    console.log("Redirecting to:", redirectUrl);
 
     // Open the URL in the system's default handler
     window.location.href = redirectUrl;
@@ -25,6 +39,12 @@ function AuthCompleteContent() {
           <p className="mt-2 text-sm text-gray-600">
             Redirecting you back to the application...
           </p>
+          <pre
+            id="debug"
+            className="mt-4 text-left text-xs text-gray-500 bg-gray-100 p-2 rounded"
+          >
+            Checking URL parameters...
+          </pre>
         </div>
       </div>
     </div>
