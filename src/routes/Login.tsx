@@ -7,6 +7,7 @@ import {
   BrowserOAuthClient,
   BrowserOAuthClientOptions,
 } from "@atproto/oauth-client-browser";
+import { onOpenUrl } from "@tauri-apps/plugin-deep-link";
 
 type LoginMethod = "credential" | "oauth";
 
@@ -24,14 +25,8 @@ export default function LoginPage() {
   useEffect(() => {
     const initOAuthClient = async () => {
       try {
-        const client = new BrowserOAuthClient({
-          clientMetadata: {
-            client_id: "http://localhost:3000", // Replace with your actual client ID
-            redirect_uris: ["http://localhost:3000/callback"], // Replace with your redirect URI
-            client_name: "ATProto Backup App",
-            client_uri: "http://localhost:3000",
-            scope: "atproto",
-          },
+        const client = await BrowserOAuthClient.load({
+          clientId: "https://atproto-backup.pages.dev/client_metadata.json",
         });
         setOauthClient(client);
       } catch (err) {
@@ -41,24 +36,7 @@ export default function LoginPage() {
     initOAuthClient();
   }, []);
 
-  const handleCredentialLogin = async () => {
-    setLoading(true);
-    setError("");
-    const agent = new Agent(new CredentialSession());
-
-    try {
-      const result = await agent.login({ identifier, password });
-      console.log("Credential login successful!", result);
-      // Store session, redirect, etc.
-    } catch (err: any) {
-      console.error(err);
-      setError(err.message || "Credential login failed");
-    } finally {
-      setLoading(false);
-    }
-  };
-
-  const handleOAuthLogin = async () => {
+  const handleLogin = async () => {
     if (!oauthClient) {
       setError("OAuth client not initialized");
       return;
@@ -135,20 +113,11 @@ export default function LoginPage() {
 
     handleCallback();
   }, [oauthClient]);
-
-  const handleLogin = () => {
-    if (loginMethod === "credential") {
-      handleCredentialLogin();
-    } else {
-      handleOAuthLogin();
-    }
-  };
-
   return (
     <div className="min-h-screen flex items-center justify-center bg-background px-4">
       <Card className="w-full max-w-sm">
         <CardHeader>
-          <CardTitle>Login to Bluesky</CardTitle>
+          <CardTitle>Login to your Bluesky account</CardTitle>
         </CardHeader>
         <CardContent className="space-y-4">
           <Input
@@ -156,14 +125,12 @@ export default function LoginPage() {
             value={identifier}
             onChange={(e) => setIdentifier(e.target.value)}
           />
-          <Input
-            type="password"
-            placeholder="Password"
-            value={password}
-            onChange={(e) => setPassword(e.target.value)}
-          />
           {error && <p className="text-sm text-red-500">{error}</p>}
-          <Button className="w-full" onClick={handleLogin} disabled={loading}>
+          <Button
+            className="w-full"
+            onClick={handleLogin}
+            disabled={loading || identifier == null}
+          >
             {loading ? "Logging in..." : "Login"}
           </Button>
         </CardContent>

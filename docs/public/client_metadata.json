@@ -6,7 +6,7 @@
     "tos_uri": "https://atproto-backup.pages.dev/tos",
     "policy_uri": "https://atproto-backup.pages.dev/policy",
     "redirect_uris": [
-        "atprotobackups://auth"
+        "https://atproto-backup.pages.dev/auth/complete"
     ],
     "scope": "atproto",
     "grant_types": [

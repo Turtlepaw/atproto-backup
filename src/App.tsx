@@ -3,6 +3,7 @@ import reactLogo from "./assets/react.svg";
 import { invoke } from "@tauri-apps/api/core";
 import "./App.css";
 import { Button } from "./components/ui/button";
+import LoginPage from "./routes/Login";
 
 function App() {
   const [greetMsg, setGreetMsg] = useState("");
@@ -14,9 +15,8 @@ function App() {
   }
 
   return (
-    <main className="container dark">
-      <div className="titlebar">
-        <div data-tauri-drag-region></div>
+    <main className="dark">
+      <div className="titlebar" data-tauri-drag-region>
         <div className="controls">
           <Button variant="ghost" id="titlebar-minimize" title="minimize">
             <svg
@@ -53,6 +53,8 @@ function App() {
           </button>
         </div>
       </div>
+
+      <LoginPage />
     </main>
   );
 }
