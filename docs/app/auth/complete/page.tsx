@@ -2,19 +2,18 @@
 
 import { useEffect, Suspense } from "react";
 
+function LoadingSpinner() {
+  return (
+    <div className="animate-spin rounded-full h-12 w-12 border-4 border-primary border-t-transparent" />
+  );
+}
+
 function AuthCompleteContent() {
   useEffect(() => {
-    // Debug logging
-    console.log("Current URL:", window.location.href);
-    console.log("Search string:", window.location.search);
-    console.log("Hash:", window.location.hash);
-
     // Get all parameters from the URL
     const currentUrl = new URL(window.location.href);
     const params = new URLSearchParams(currentUrl.search);
 
-    // Debug log all parameters
-    console.log("All parameters:");
     params.forEach((value, key) => {
       console.log(key, "=", value);
     });
@@ -23,28 +22,49 @@ function AuthCompleteContent() {
     const redirectUrl = `atprotobackups://auth${
       currentUrl.search || "?" + currentUrl.hash.slice(1)
     }`;
-    console.log("Redirecting to:", redirectUrl);
 
     // Open the URL in the system's default handler
     window.location.href = redirectUrl;
   }, []);
 
   return (
-    <div className="min-h-screen flex items-center justify-center bg-gray-50">
-      <div className="max-w-md w-full space-y-8 p-8 bg-white rounded-lg shadow-md">
-        <div className="text-center">
-          <h2 className="mt-6 text-3xl font-bold text-gray-900">
+    <div className="min-h-screen flex items-center justify-center bg-gradient-to-br from-blue-50 to-indigo-50">
+      <div className="max-w-md w-full space-y-8 p-8 bg-white/80 backdrop-blur-sm rounded-2xl shadow-xl border border-white/20">
+        <div className="text-center space-y-6">
+          <div className="flex justify-center">
+            <div className="animate-spin rounded-full h-12 w-12 border-4 border-blue-600 border-t-transparent" />
+          </div>
+          <h2 className="text-3xl font-bold text-gray-900 tracking-tight">
             Authentication Complete
           </h2>
-          <p className="mt-2 text-sm text-gray-600">
+          <p className="text-lg text-gray-600">
             Redirecting you back to the application...
           </p>
-          <pre
-            id="debug"
-            className="mt-4 text-left text-xs text-gray-500 bg-gray-100 p-2 rounded"
-          >
-            Checking URL parameters...
-          </pre>
+          <div className="h-1 w-full bg-gray-200 rounded-full overflow-hidden">
+            <div
+              className="h-full bg-blue-600 rounded-full animate-progress"
+              style={{
+                animation: "progress 2s ease-in-out infinite",
+              }}
+            />
+          </div>
+        </div>
+      </div>
+    </div>
+  );
+}
+
+function LoadingFallback() {
+  return (
+    <div className="min-h-screen flex items-center justify-center bg-gradient-to-br from-blue-50 to-indigo-50">
+      <div className="max-w-md w-full space-y-8 p-8 bg-white/80 backdrop-blur-sm rounded-2xl shadow-xl border border-white/20">
+        <div className="text-center space-y-6">
+          <div className="flex justify-center">
+            <div className="animate-spin rounded-full h-12 w-12 border-4 border-blue-600 border-t-transparent" />
+          </div>
+          <h2 className="text-3xl font-bold text-gray-900 tracking-tight">
+            Loading...
+          </h2>
         </div>
       </div>
     </div>
@@ -53,19 +73,23 @@ function AuthCompleteContent() {
 
 export default function AuthComplete() {
   return (
-    <Suspense
-      fallback={
-        <div className="min-h-screen flex items-center justify-center bg-gray-50">
-          <div className="max-w-md w-full space-y-8 p-8 bg-white rounded-lg shadow-md">
-            <div className="text-center">
-              <h2 className="mt-6 text-3xl font-bold text-gray-900">
-                Loading...
-              </h2>
-            </div>
-          </div>
-        </div>
-      }
-    >
+    <Suspense fallback={<LoadingFallback />}>
+      <style jsx global>{`
+        @keyframes progress {
+          0% {
+            width: 0%;
+          }
+          50% {
+            width: 100%;
+          }
+          100% {
+            width: 0%;
+          }
+        }
+        .animate-progress {
+          animation: progress 2s ease-in-out infinite;
+        }
+      `}</style>
       <AuthCompleteContent />
     </Suspense>
   );
