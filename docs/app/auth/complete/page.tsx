@@ -23,8 +23,16 @@ function AuthCompleteContent() {
       currentUrl.search || "?" + currentUrl.hash.slice(1)
     }`;
 
-    // Open the URL in the system's default handler
+    // Open the URL in the system's default handler and close the window after a short delay
     window.location.href = redirectUrl;
+
+    // Close the window after a short delay to ensure the protocol handler is triggered
+    setTimeout(() => {
+      window.close();
+      // Fallback message if window.close() fails (some browsers prevent it)
+      document.body.innerHTML =
+        '<div class="min-h-screen flex items-center justify-center bg-gradient-to-br from-blue-50 to-indigo-50"><div class="max-w-md w-full p-8 text-center"><p class="text-lg text-gray-600">Authentication complete! You can close this window.</p></div></div>';
+    }, 1500);
   }, []);
 
   return (
