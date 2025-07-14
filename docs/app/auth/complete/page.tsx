@@ -1,24 +1,19 @@
 "use client";
 
 import { useEffect, Suspense } from "react";
-import { useSearchParams } from "next/navigation";
 
 function AuthCompleteContent() {
-  const searchParams = useSearchParams();
-
   useEffect(() => {
-    // Get all URL parameters
-    const params = new URLSearchParams();
-    searchParams.forEach((value, key) => {
-      params.append(key, value);
-    });
+    // Get the raw search string from the URL
+    const searchString = window.location.search;
 
-    // Construct the redirect URL with all parameters
-    const redirectUrl = `atprotobackups://auth?${params.toString()}`;
+    // Construct the redirect URL with the raw search string
+    const redirectUrl = `atprotobackups://auth${searchString}`;
+    console.log("Redirecting to:", redirectUrl); // Debug log
 
     // Open the URL in the system's default handler
     window.location.href = redirectUrl;
-  }, [searchParams]);
+  }, []);
 
   return (
     <div className="min-h-screen flex items-center justify-center bg-gray-50">
