@@ -1,9 +1,9 @@
 "use client";
 
-import { useEffect } from "react";
+import { useEffect, Suspense } from "react";
 import { useSearchParams } from "next/navigation";
 
-export default function AuthComplete() {
+function AuthCompleteContent() {
   const searchParams = useSearchParams();
 
   useEffect(() => {
@@ -33,5 +33,25 @@ export default function AuthComplete() {
         </div>
       </div>
     </div>
+  );
+}
+
+export default function AuthComplete() {
+  return (
+    <Suspense
+      fallback={
+        <div className="min-h-screen flex items-center justify-center bg-gray-50">
+          <div className="max-w-md w-full space-y-8 p-8 bg-white rounded-lg shadow-md">
+            <div className="text-center">
+              <h2 className="mt-6 text-3xl font-bold text-gray-900">
+                Loading...
+              </h2>
+            </div>
+          </div>
+        </div>
+      }
+    >
+      <AuthCompleteContent />
+    </Suspense>
   );
 }
