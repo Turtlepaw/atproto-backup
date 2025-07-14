@@ -8,7 +8,7 @@
     "redirect_uris": [
         "https://atproto-backup.pages.dev/auth/complete"
     ],
-    "scope": "atproto",
+    "scope": "atproto transition:generic",
     "grant_types": [
         "authorization_code",
         "refresh_token"
