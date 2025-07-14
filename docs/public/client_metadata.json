@@ -1,11 +1,10 @@
 {
-    // Must be the same URL as the one used to obtain this JSON object
-    "client_id": "https://my-app.com/client-metadata.json",
+    "client_id": "https://atproto-backup.pages.dev/client_metadata.json",
     "client_name": "My App",
-    "client_uri": "https://my-app.com",
-    "logo_uri": "https://my-app.com/logo.png",
-    "tos_uri": "https://my-app.com/tos",
-    "policy_uri": "https://my-app.com/policy",
+    "client_uri": "https://atproto-backup.pages.dev",
+    "logo_uri": "https://atproto-backup.pages.dev/logo.png",
+    "tos_uri": "https://atproto-backup.pages.dev/tos",
+    "policy_uri": "https://atproto-backup.pages.dev/policy",
     "redirect_uris": [
         "atprotobackups://auth"
     ],
