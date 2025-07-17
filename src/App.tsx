@@ -1,103 +1,42 @@
 import { useState, useEffect } from "react";
-import reactLogo from "./assets/react.svg";
 import { invoke } from "@tauri-apps/api/core";
 import "./App.css";
 import { Button } from "./components/ui/button";
 import LoginPage from "./routes/Login";
 import { getCurrentWindow } from "@tauri-apps/api/window";
-import {
-  Agent,
-  AtpAgent,
-  type AtpSessionData,
-  type AtpSessionEvent,
-} from "@atproto/api";
-import {
-  BrowserOAuthClient,
-  OAuthSession,
-} from "@atproto/oauth-client-browser";
-import { LoaderIcon } from "lucide-react";
-import { ProfileViewDetailed } from "@atproto/api/dist/client/types/app/bsky/actor/defs";
+import { Agent } from "@atproto/api";
+import { OAuthSession } from "@atproto/oauth-client-browser";
+import { LoaderCircleIcon, LoaderIcon } from "lucide-react";
+import { AuthProvider, useAuth } from "./Auth";
+import { initializeLocalStorage } from "./localstorage_ployfill";
+import { Home } from "./routes/Home";
+import { ThemeProvider } from "./theme-provider";
+import { Toaster } from "sonner";
+import { ScrollArea } from "./components/ui/scroll-area";
 
-function LoggedInScreen({
-  session,
-  onLogout,
-  agent,
-}: {
-  session: OAuthSession;
-  onLogout: () => void;
-  agent: Agent;
-}) {
-  const [userData, setUserData] = useState<ProfileViewDetailed | null>(null);
-
-  useEffect(() => {
-    (async () => {
-      const sessionData = await agent.getProfile({ actor: agent.assertDid });
-      setUserData(sessionData.data);
-    })();
-  }, [agent]);
-
-  return (
-    <div className="p-4 mt-10">
-      <div className="flex justify-between items-center mb-4">
-        <h1 className="text-2xl font-bold">Welcome!</h1>
-        <Button onClick={onLogout}>Logout</Button>
-      </div>
-      <div className="bg-card rounded-lg p-4">
-        <p className="mb-2 text-white">
-          Logged in as: <span className="font-mono">@{userData?.handle}</span>
-        </p>
-        <p className="text-sm text-muted-foreground"></p>
-      </div>
-    </div>
-  );
-}
-
-function App() {
-  const [session, setSession] = useState<OAuthSession | null>(null);
+function AppContent() {
+  const { isLoading, isAuthenticated, profile, client, login, logout } =
+    useAuth();
   const appWindow = getCurrentWindow();
-  const [client, setClient] = useState<BrowserOAuthClient | null>(null);
-  const [agent, setAgent] = useState<Agent | null>(null);
 
-  // Load session from localStorage on mount
+  const [isLocalStorageReady, setIsLocalStorageReady] = useState(false);
+
   useEffect(() => {
-    (async () => {
-      const client = await BrowserOAuthClient.load({
-        clientId: "https://atproto-backup.pages.dev/client_metadata.json",
-        handleResolver: "https://bsky.social",
-      });
-
-      //@ts-expect-error
-      const result: undefined | { session: OAuthSession; state?: string } =
-        await client.init();
-
-      if (result) {
-        const { session, state } = result;
-        if (state != null) {
-          console.log(
-            `${session.sub} was successfully authenticated (state: ${state})`
-          );
-        } else {
-          console.log(`${session.sub} was restored (last active session)`);
-        }
-        setSession(session);
-        setAgent(new Agent(session));
+    const initStorage = async () => {
+      try {
+        await initializeLocalStorage();
+        setIsLocalStorageReady(true);
+      } catch (error) {
+        console.error("Failed to initialize localStorage:", error);
+        setIsLocalStorageReady(true); // Continue anyway
       }
-      setClient(client);
-    })();
+    };
+
+    initStorage();
   }, []);
 
-  const handleLogin = (newSession: OAuthSession) => {
-    setSession(newSession);
-    setAgent(new Agent(newSession));
-  };
-
-  const handleLogout = () => {
-    setSession(null);
-    setAgent(null);
-  };
-
   return (
-    <main className="dark bg-background min-h-screen flex flex-col">
+    <main className="bg-background dark min-h-screen flex flex-col">
       <div className="titlebar" data-tauri-drag-region>
         <div className="controls">
           <Button
@@ -155,24 +94,30 @@ function App() {
         </div>
       </div>
 
-      {client ? (
-        <>
-          {session && agent ? (
-            <LoggedInScreen
-              session={session}
-              onLogout={handleLogout}
-              agent={agent}
-            />
-          ) : (
-            <LoginPage onLogin={handleLogin} client={client} />
-          )}
-        </>
-      ) : (
-        <div className="flex-1 flex items-center justify-center">
-          <LoaderIcon className="animate-spin" />
-        </div>
-      )}
+      <ScrollArea>
+        {isLoading || !isLocalStorageReady ? (
+          <div className="fixed inset-0 flex items-center justify-center">
+            <LoaderCircleIcon className="animate-spin text-white/80" />
+          </div>
+        ) : isAuthenticated ? (
+          <Home profile={profile!!} onLogout={logout} />
+        ) : (
+          <LoginPage onLogin={login} client={client} />
+        )}
+      </ScrollArea>
+
+      <Toaster />
     </main>
+  );
+}
+
+function App() {
+  return (
+    <ThemeProvider defaultTheme="dark" storageKey="vite-ui-theme">
+      <AuthProvider>
+        <AppContent />
+      </AuthProvider>
+    </ThemeProvider>
   );
 }
 

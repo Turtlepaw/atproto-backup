@@ -1,6 +1,6 @@
 {
     "client_id": "https://atproto-backup.pages.dev/client_metadata.json",
-    "client_name": "My App",
+    "client_name": "ATProto Backup",
     "client_uri": "https://atproto-backup.pages.dev",
     "logo_uri": "https://atproto-backup.pages.dev/logo.png",
     "tos_uri": "https://atproto-backup.pages.dev/tos",
@@ -8,15 +8,15 @@
     "redirect_uris": [
         "https://atproto-backup.pages.dev/auth/complete"
     ],
-    "scope": "atproto transition:generic",
     "grant_types": [
         "authorization_code",
         "refresh_token"
     ],
+    "scope": "atproto transition:generic",
     "response_types": [
         "code"
     ],
-    "token_endpoint_auth_method": "none",
     "application_type": "web",
+    "token_endpoint_auth_method": "none",
     "dpop_bound_access_tokens": true
 }

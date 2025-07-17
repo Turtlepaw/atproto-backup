@@ -1,8 +1,8 @@
 {
   "$schema": "https://schema.tauri.app/config/2",
-  "productName": "atproto-backup",
+  "productName": "ATBackup",
   "version": "0.1.0",
-  "identifier": "io.github.turtlepaw.atproto.backup",
+  "identifier": "ATBackup",
   "build": {
     "beforeDevCommand": "bun run dev",
     "devUrl": "http://localhost:1420",
@@ -12,10 +12,11 @@
   "app": {
     "windows": [
       {
-        "title": "ATP Backup",
+        "title": "ATBackup",
         "width": 800,
         "height": 600,
-        "decorations": false
+        "decorations": false,
+        "label": "main"
       }
     ],
     "security": {

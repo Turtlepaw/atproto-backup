@@ -143,8 +143,8 @@
 
 .titlebar {
   height: 40px;
-  background: rgba(0, 0, 0, 0.6);
-  backdrop-filter: blur(150px);
+  background: rgba(0, 0, 0, 0.5);
+  backdrop-filter: blur(100px);
   user-select: none;
   display: flex;
   justify-content: flex-end;
@@ -183,4 +183,36 @@
   font-size: 18px;
   line-height: 1;
   vertical-align: middle;
+}
+
+/* Main content area that starts below the titlebar */
+.main-content {
+  flex: 1;
+  overflow-y: auto;
+}
+
+.custom-scrollbar {
+  scrollbar-width: thin;
+  scrollbar-color: #6366f1 #18181b;
+}
+
+.custom-scrollbar::-webkit-scrollbar {
+  width: 10px;
+  background: #18181b;
+  border-radius: 8px;
+}
+
+.custom-scrollbar::-webkit-scrollbar-thumb {
+  background: #6366f1;
+  border-radius: 8px;
+  min-height: 40px;
+  border: 2px solid #18181b;
+}
+
+.custom-scrollbar::-webkit-scrollbar-thumb:hover {
+  background: #818cf8;
+}
+
+.custom-scrollbar::-webkit-scrollbar-corner {
+  background: #18181b;
 }

@@ -8,18 +8,16 @@ import {
   CredentialSession,
   AtpSessionData,
 } from "@atproto/api";
-import {
-  BrowserOAuthClient,
-  BrowserOAuthClientOptions,
-  OAuthSession,
-} from "@atproto/oauth-client-browser";
 import { onOpenUrl } from "@tauri-apps/plugin-deep-link";
+import { openUrl } from "@tauri-apps/plugin-opener";
+import { OAuthClient, type OAuthSession } from "@atproto/oauth-client";
+import { SquareArrowOutUpRight } from "lucide-react";
 
 type LoginMethod = "credential" | "oauth";
 
 interface LoginPageProps {
   onLogin: (session: OAuthSession) => void;
-  client: BrowserOAuthClient;
+  client: OAuthClient | null;
 }
 
 export default function LoginPage({
@@ -55,6 +53,7 @@ export default function LoginPage({
             // Get the first URL from the array and parse it
             const url = new URL(urls[0]);
 
+            console.log("OAuth callback URL:", url.searchParams.entries);
             // Process the OAuth callback with the URLSearchParams directly
             const session = await oauthClient.callback(url.searchParams);
             console.log("OAuth callback successful!", session);
@@ -63,6 +62,7 @@ export default function LoginPage({
           } catch (err) {
             console.error("Failed to process OAuth callback:", err);
             setError("Failed to complete OAuth login");
+            setLoading(false);
           } finally {
             processingOAuthRef.current = false;
           }
@@ -72,7 +72,7 @@ export default function LoginPage({
       }
     };
     initOAuthClient();
-  }, [onLogin]);
+  }, [onLogin, oauthClient]);
 
   const handleLogin = async () => {
     if (!oauthClient) {
@@ -90,32 +90,39 @@ export default function LoginPage({
         return;
       }
 
-      // Sign in using OAuth with popup
-      const session = await oauthClient.signInPopup(identifier, {
+      const url = await oauthClient.authorize(identifier, {
         scope: "atproto transition:generic",
         ui_locales: "en",
         signal: new AbortController().signal,
       });
 
-      console.log("OAuth login successful!", session);
-      onLogin(session);
+      await openUrl(url);
     } catch (err: any) {
       console.error(err);
       setError(err.message || "OAuth login failed");
-    } finally {
       setLoading(false);
     }
   };
 
   return (
-    <div className="min-h-screen flex items-center justify-center bg-background px-4">
-      <Card className="w-full max-w-sm">
+    <div
+      className="min-h-screen flex items-center justify-center bg-background px-4 relative"
+      style={{
+        backgroundImage: "url(/src/assets/milky_way.jpg)",
+        backgroundSize: "300%",
+        backgroundPosition: "center",
+        backgroundRepeat: "no-repeat",
+      }}
+    >
+      <Card className="w-full max-w-sm bg-black/50 backdrop-blur-md">
         <CardHeader>
-          <CardTitle>Login with your handle on the Atmosphere</CardTitle>
+          <CardTitle className="cursor-default">
+            Login with your handle on the Atmosphere
+          </CardTitle>
         </CardHeader>
         <CardContent className="space-y-4">
           <Input
-            placeholder="Username or email"
+            placeholder="example.bsky.social"
             value={identifier}
             onChange={(e) => setIdentifier(e.target.value)}
           />
@@ -123,12 +130,31 @@ export default function LoginPage({
           <Button
             className="w-full cursor-pointer"
             onClick={handleLogin}
-            disabled={loading || identifier == null}
+            disabled={loading || !identifier || !oauthClient}
           >
             {loading ? "Logging in..." : "Login"}
           </Button>
         </CardContent>
       </Card>
+      <div
+        className="absolute left-0 bottom-0 m-4 text-xs text-white/60 flex flex-row items-center gap-1"
+        style={{ pointerEvents: "auto" }}
+      >
+        <button
+          type="button"
+          className="gap-2 p-0 bg-transparent border-none text-inherit hover:underline flex items-center cursor-pointer"
+          onClick={() =>
+            openUrl(
+              "https://commons.wikimedia.org/wiki/File:Bontecou_Lake_Milky_Way_panorama.jpg"
+            )
+          }
+          tabIndex={0}
+          aria-label="Open image in browser"
+        >
+          <span>Image by Juliancolton, CC BY-SA 4.0</span>
+          <SquareArrowOutUpRight size={14} />
+        </button>
+      </div>
     </div>
   );
 }

@@ -7,7 +7,6 @@
   ],
   "permissions": [
     "core:default",
-    "opener:default",
     "core:window:default",
     "core:window:allow-start-dragging",
     "core:event:default",
@@ -15,6 +14,39 @@
     "core:window:allow-close",
     "core:window:allow-minimize",
     "core:window:allow-toggle-maximize",
-    "core:window:allow-internal-toggle-maximize"
+    "core:window:allow-internal-toggle-maximize",
+    "opener:default",
+    "store:default",
+    {
+      "identifier": "opener:allow-open-path",
+      "allow": [
+        {
+          "path": "$DOCUMENT/ATBackup"
+        }
+      ]
+    },
+    "opener:allow-open-url",
+    "fs:default",
+    {
+      "identifier": "fs:allow-exists",
+      "allow": [
+        {
+          "path": "$DOCUMENT/ATBackup/*"
+        },
+        {
+          "path": "$DOCUMENT/ATBackup"
+        }
+      ]
+    },
+    {
+      "identifier": "fs:allow-mkdir",
+      "allow": [
+        {
+          "path": "$DOCUMENT/ATBackup"
+        }
+      ]
+    },
+    "fs:scope-document-recursive",
+    "fs:allow-document-write-recursive"
   ]
 }
