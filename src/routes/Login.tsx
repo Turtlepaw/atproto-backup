@@ -2,18 +2,11 @@ import { useState, useEffect, useRef } from "react";
 import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
-import {
-  AtpSessionEvent,
-  Agent,
-  CredentialSession,
-  AtpSessionData,
-} from "@atproto/api";
 import { onOpenUrl } from "@tauri-apps/plugin-deep-link";
 import { openUrl } from "@tauri-apps/plugin-opener";
 import { OAuthClient, type OAuthSession } from "@atproto/oauth-client";
 import { SquareArrowOutUpRight } from "lucide-react";
-
-type LoginMethod = "credential" | "oauth";
+import { enable } from "@tauri-apps/plugin-autostart";
 
 interface LoginPageProps {
   onLogin: (session: OAuthSession) => void;
@@ -25,10 +18,8 @@ export default function LoginPage({
   client: oauthClient,
 }: LoginPageProps) {
   const [identifier, setIdentifier] = useState("");
-  const [password, setPassword] = useState("");
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState("");
-  const [loginMethod, setLoginMethod] = useState<LoginMethod>("credential");
   const processingOAuthRef = useRef(false);
 
   // Initialize OAuth client
@@ -57,6 +48,7 @@ export default function LoginPage({
             // Process the OAuth callback with the URLSearchParams directly
             const session = await oauthClient.callback(url.searchParams);
             console.log("OAuth callback successful!", session);
+            enable();
             onLogin(session.session);
             setLoading(false);
           } catch (err) {

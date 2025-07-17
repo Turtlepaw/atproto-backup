@@ -1,4 +1,4 @@
-import { CarReader, RepoReader } from "@atcute/car/v4";
+import { RepoReader } from "@atcute/car/v4";
 
 export interface CarStats {
   totalBlocks: number;

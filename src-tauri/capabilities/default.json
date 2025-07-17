@@ -47,6 +47,9 @@
       ]
     },
     "fs:scope-document-recursive",
-    "fs:allow-document-write-recursive"
+    "fs:allow-document-write-recursive",
+    "autostart:allow-enable",
+    "autostart:allow-disable",
+    "autostart:allow-is-enabled"
   ]
 }

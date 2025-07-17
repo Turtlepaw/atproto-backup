@@ -2,7 +2,7 @@ import { Agent } from "@atproto/api";
 import { ProfileViewDetailed } from "@atproto/api/dist/client/types/app/bsky/actor/defs";
 import { OAuthClient, type OAuthSession } from "@atproto/oauth-client";
 import { BrowserOAuthClient } from "@atproto/oauth-client-browser";
-import { load, Store } from "@tauri-apps/plugin-store";
+import { Store } from "@tauri-apps/plugin-store";
 import {
   createContext,
   ReactNode,
@@ -10,10 +10,6 @@ import {
   useEffect,
   useState,
 } from "react";
-
-interface StoredSession {
-  did: string;
-}
 
 interface AuthContextType {
   isLoading: boolean;

@@ -5,43 +5,32 @@ import {
   DropdownMenu,
   DropdownMenuContent,
   DropdownMenuItem,
-  DropdownMenuLabel,
-  DropdownMenuSeparator,
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
 import { openPath } from "@tauri-apps/plugin-opener";
-import { appDataDir, documentDir } from "@tauri-apps/api/path";
 import { createBackupDir, getBackupDir } from "@/lib/paths";
 import { useEffect, useState, useRef } from "react";
 import {
   History,
   LoaderCircleIcon,
   ChevronDown,
-  ChevronUp,
   FolderOpen,
-  Download,
   Database,
   FileText,
   HardDrive,
-  Calendar,
   Package,
-  Zap,
   Heart,
   Users,
   User,
+  Settings as SettingsIcon,
 } from "lucide-react";
 import { BackupManager, Metadata } from "@/lib/backup";
 import { useAuth } from "@/Auth";
 import { toast } from "sonner";
+import { settingsManager } from "@/lib/settings";
 import { Badge } from "@/components/ui/badge";
-import {
-  Card,
-  CardContent,
-  CardDescription,
-  CardHeader,
-  CardTitle,
-} from "@/components/ui/card";
 import { Progress } from "@/components/ui/progress";
+import Settings from "./Settings";
 
 export function Home({
   profile,
@@ -52,10 +41,15 @@ export function Home({
 }) {
   const [isDirLoading, setDirLoading] = useState(false);
   const [refreshTrigger, setRefreshTrigger] = useState(0);
+  const [showSettings, setShowSettings] = useState(false);
 
   const handleBackupComplete = () => {
     setRefreshTrigger((prev) => prev + 1);
   };
+
+  if (showSettings) {
+    return <Settings onBack={() => setShowSettings(false)} />;
+  }
 
   return (
     <div className="p-4 mt-10">
@@ -86,6 +80,14 @@ export function Home({
             </DropdownMenuContent>
           </DropdownMenu>
         </div>
+        <Button
+          variant="ghost"
+          size="sm"
+          onClick={() => setShowSettings(true)}
+          className="text-white/80 hover:text-white"
+        >
+          <SettingsIcon className="w-4 h-4" />
+        </Button>
       </div>
 
       <div className="bg-card rounded-lg p-4 mb-4">
@@ -140,6 +142,7 @@ function StartBackup({ onBackupComplete }: { onBackupComplete: () => void }) {
           }
           const manager = new BackupManager(agent!!);
           await manager.startBackup();
+          await settingsManager.setLastBackupDate(new Date().toISOString());
           toast("Backup complete!");
           onBackupComplete(); // Trigger refresh
         } catch (err: any) {

@@ -1,21 +1,20 @@
 import { useState, useEffect } from "react";
-import { invoke } from "@tauri-apps/api/core";
 import "./App.css";
 import { Button } from "./components/ui/button";
 import LoginPage from "./routes/Login";
 import { getCurrentWindow } from "@tauri-apps/api/window";
-import { Agent } from "@atproto/api";
-import { OAuthSession } from "@atproto/oauth-client-browser";
-import { LoaderCircleIcon, LoaderIcon } from "lucide-react";
+import { LoaderCircleIcon } from "lucide-react";
 import { AuthProvider, useAuth } from "./Auth";
 import { initializeLocalStorage } from "./localstorage_ployfill";
 import { Home } from "./routes/Home";
 import { ThemeProvider } from "./theme-provider";
 import { Toaster } from "sonner";
 import { ScrollArea } from "./components/ui/scroll-area";
+import { BackupManager } from "./lib/backup";
+import { settingsManager } from "./lib/settings";
 
 function AppContent() {
-  const { isLoading, isAuthenticated, profile, client, login, logout } =
+  const { isLoading, isAuthenticated, profile, client, login, logout, agent } =
     useAuth();
   const appWindow = getCurrentWindow();
 
@@ -34,6 +33,73 @@ function AppContent() {
 
     initStorage();
   }, []);
+
+  // Auto-backup functionality
+  useEffect(() => {
+    if (!isAuthenticated || !agent) return;
+
+    let intervalId: ReturnType<typeof setInterval> | null = null;
+
+    const checkAndPerformBackup = async () => {
+      try {
+        const lastBackupDate = await settingsManager.getLastBackupDate();
+        const frequency = await settingsManager.getBackupFrequency();
+
+        if (!lastBackupDate) {
+          // No previous backup, so we should do one
+          await performBackup();
+          return;
+        }
+
+        const lastBackup = new Date(lastBackupDate);
+        const now = new Date();
+        const timeDiff = now.getTime() - lastBackup.getTime();
+
+        if (frequency === "daily") {
+          // Check if 24 hours have passed
+          const oneDay = 24 * 60 * 60 * 1000;
+          if (timeDiff >= oneDay) {
+            await performBackup();
+          }
+        } else if (frequency === "weekly") {
+          // Check if 7 days have passed
+          const oneWeek = 7 * 24 * 60 * 60 * 1000;
+          if (timeDiff >= oneWeek) {
+            await performBackup();
+          }
+        }
+      } catch (error) {
+        console.error("Error in automatic backup check:", error);
+      }
+    };
+
+    const performBackup = async () => {
+      try {
+        console.log("Automatic backup due, starting backup...");
+        const manager = new BackupManager(agent);
+        await manager.startBackup();
+
+        // Update the last backup date
+        await settingsManager.setLastBackupDate(new Date().toISOString());
+
+        console.log("Automatic backup completed successfully");
+      } catch (error) {
+        console.error("Automatic backup failed:", error);
+      }
+    };
+
+    // Check immediately when authenticated
+    checkAndPerformBackup();
+
+    // Set up interval to check every hour
+    intervalId = setInterval(checkAndPerformBackup, 60 * 60 * 1000);
+
+    return () => {
+      if (intervalId) {
+        clearInterval(intervalId);
+      }
+    };
+  }, [isAuthenticated, agent]);
 
   return (
     <main className="bg-background dark min-h-screen flex flex-col">
