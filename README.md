@@ -1,6 +1,17 @@
-# Tauri + React + Typescript
+<div align="center">
+<img src="./images/atbackup_large.png"/>
 
-This template should help get you started developing with Tauri, React and Typescript in Vite.
+<h1>AT Backup</h1>
+<p>One-click local Bluesky/ATProto backups</p>
+</div>
+
+## Built with
+
+- Tauri
+- React
+- ATProto
+- atcute (for CAR file parsing)
+- shadcn UI
 
 ## Recommended IDE Setup
 
