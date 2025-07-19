@@ -100,7 +100,7 @@ export default function LoginPage({
     <div
       className="min-h-screen flex items-center justify-center bg-background px-4 relative"
       style={{
-        backgroundImage: "url(/src/assets/milky_way.jpg)",
+        backgroundImage: "url(/milky_way.jpg)",
         backgroundSize: "300%",
         backgroundPosition: "center",
         backgroundRepeat: "no-repeat",

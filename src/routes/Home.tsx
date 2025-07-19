@@ -1,35 +1,35 @@
-import { Button } from "@/components/ui/button";
-import { ProfileViewDetailed } from "@atproto/api/dist/client/types/app/bsky/actor/defs";
+import { useAuth } from "@/Auth";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
+import { Badge } from "@/components/ui/badge";
+import { Button } from "@/components/ui/button";
 import {
   DropdownMenu,
   DropdownMenuContent,
   DropdownMenuItem,
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
-import { openPath } from "@tauri-apps/plugin-opener";
-import { createBackupDir, getBackupDir } from "@/lib/paths";
-import { useEffect, useState, useRef } from "react";
-import {
-  History,
-  LoaderCircleIcon,
-  ChevronDown,
-  FolderOpen,
-  Database,
-  FileText,
-  HardDrive,
-  Package,
-  Heart,
-  Users,
-  User,
-  Settings as SettingsIcon,
-} from "lucide-react";
-import { BackupManager, Metadata } from "@/lib/backup";
-import { useAuth } from "@/Auth";
-import { toast } from "sonner";
-import { settingsManager } from "@/lib/settings";
-import { Badge } from "@/components/ui/badge";
 import { Progress } from "@/components/ui/progress";
+import { BackupAgent, BackupStage, Metadata } from "@/lib/backup";
+import { createBackupDir, getBackupDir } from "@/lib/paths";
+import { settingsManager } from "@/lib/settings";
+import { ProfileViewDetailed } from "@atproto/api/dist/client/types/app/bsky/actor/defs";
+import { openPath } from "@tauri-apps/plugin-opener";
+import {
+  ChevronDown,
+  FileText,
+  FolderOpen,
+  HardDrive,
+  Heart,
+  History,
+  Images,
+  LoaderCircleIcon,
+  Package,
+  Settings as SettingsIcon,
+  User,
+  Users,
+} from "lucide-react";
+import { useEffect, useRef, useState } from "react";
+import { toast } from "sonner";
 import Settings from "./Settings";
 
 export function Home({
@@ -84,11 +84,15 @@ export function Home({
           variant="ghost"
           size="sm"
           onClick={() => setShowSettings(true)}
-          className="text-white/80 hover:text-white"
+          className="text-white/80 hover:text-white cursor-pointer"
         >
           <SettingsIcon className="w-4 h-4" />
         </Button>
       </div>
+
+      {/* For testing auto backup */}
+      {/* <TestAutoBackup /> */}
+      {/* <BackgroundTest /> */}
 
       <div className="bg-card rounded-lg p-4 mb-4">
         <p className="mb-2 text-white">Backups</p>
@@ -117,6 +121,16 @@ export function Home({
           </Button>
 
           <StartBackup onBackupComplete={handleBackupComplete} />
+
+          {/* <Button
+            variant="outline"
+            className="cursor-pointer"
+            onClick={async () => {
+              await BackgroundTestService.testBackgroundBackup();
+            }}
+          >
+            Test Background
+          </Button> */}
         </div>
       </div>
 
@@ -127,6 +141,8 @@ export function Home({
 
 function StartBackup({ onBackupComplete }: { onBackupComplete: () => void }) {
   const [isLoading, setIsLoading] = useState(false);
+  const [stage, setStage] = useState<BackupStage | null>(null);
+  const [_, setProgress] = useState<number | undefined>();
   const { agent } = useAuth();
 
   return (
@@ -140,7 +156,12 @@ function StartBackup({ onBackupComplete }: { onBackupComplete: () => void }) {
             toast("Agent not initialized, try to reload the app.");
             return;
           }
-          const manager = new BackupManager(agent!!);
+          const manager = new BackupAgent(agent!!, {
+            onProgress: (progress) => {
+              setStage(progress.stage);
+              setProgress(progress.progress);
+            },
+          });
           await manager.startBackup();
           await settingsManager.setLastBackupDate(new Date().toISOString());
           toast("Backup complete!");
@@ -155,7 +176,10 @@ function StartBackup({ onBackupComplete }: { onBackupComplete: () => void }) {
       disabled={isLoading}
     >
       {isLoading ? (
-        <LoaderCircleIcon className="animate-spin text-white/80" />
+        <>
+          <LoaderCircleIcon className="animate-spin text-white/80" />
+          <span className="capitalize">{stage}</span>
+        </>
       ) : (
         <span>Backup now</span>
       )}
@@ -194,7 +218,7 @@ function Backups({ refreshTrigger }: { refreshTrigger: number }) {
     }
     setIsLoading(true);
     try {
-      const manager = new BackupManager(agent);
+      const manager = new BackupAgent(agent);
       const backupsList = await manager.getBackups();
       // Sort backups by timestamp (newest first)
       const sortedBackups = backupsList.sort(
@@ -336,11 +360,11 @@ function Backups({ refreshTrigger }: { refreshTrigger: number }) {
                     </div>
 
                     <div className="flex items-center gap-2 p-3 rounded-lg bg-white/5">
-                      <Database className="w-5 h-5 text-purple-400" />
+                      <Images className="w-5 h-5 text-purple-400" />
                       <div>
-                        <p className="text-white/60 text-xs">Blocks</p>
+                        <p className="text-white/60 text-xs">Attachments</p>
                         <p className="text-white font-semibold">
-                          {backup.stats?.totalBlocks?.toLocaleString() || "-"}
+                          {backup.blobCount?.toLocaleString() || "-"}
                         </p>
                       </div>
                     </div>

@@ -8,10 +8,16 @@ import { AuthProvider, useAuth } from "./Auth";
 import { initializeLocalStorage } from "./localstorage_ployfill";
 import { Home } from "./routes/Home";
 import { ThemeProvider } from "./theme-provider";
-import { Toaster } from "sonner";
+import { toast, Toaster } from "sonner";
 import { ScrollArea } from "./components/ui/scroll-area";
-import { BackupManager } from "./lib/backup";
+import { BackupAgent } from "./lib/backup";
 import { settingsManager } from "./lib/settings";
+import { check } from "@tauri-apps/plugin-updater";
+import { relaunch } from "@tauri-apps/plugin-process";
+import {
+  BackgroundBackupService,
+  handleBackgroundBackup,
+} from "./lib/backgroundBackup";
 
 function AppContent() {
   const { isLoading, isAuthenticated, profile, client, login, logout, agent } =
@@ -34,7 +40,33 @@ function AppContent() {
     initStorage();
   }, []);
 
-  // Auto-backup functionality
+  // Background backup service initialization
+  useEffect(() => {
+    if (!isAuthenticated || !agent) return;
+
+    const backgroundService = BackgroundBackupService.getInstance();
+    backgroundService.initialize();
+
+    // Listen for background backup requests
+    const handleBackgroundBackupRequest = () => {
+      handleBackgroundBackup(agent);
+    };
+
+    window.addEventListener(
+      "background-backup-requested",
+      handleBackgroundBackupRequest
+    );
+
+    return () => {
+      window.removeEventListener(
+        "background-backup-requested",
+        handleBackgroundBackupRequest
+      );
+      backgroundService.stop();
+    };
+  }, [isAuthenticated, agent]);
+
+  // Auto-backup functionality (for when app is open)
   useEffect(() => {
     if (!isAuthenticated || !agent) return;
 
@@ -76,7 +108,7 @@ function AppContent() {
     const performBackup = async () => {
       try {
         console.log("Automatic backup due, starting backup...");
-        const manager = new BackupManager(agent);
+        const manager = new BackupAgent(agent);
         await manager.startBackup();
 
         // Update the last backup date
@@ -100,6 +132,42 @@ function AppContent() {
       }
     };
   }, [isAuthenticated, agent]);
+
+  useEffect(() => {
+    (async () => {
+      const update = await check();
+      if (update) {
+        console.log(
+          `found update ${update.version} from ${update.date} with notes ${update.body}`
+        );
+        toast("Downloading new update...");
+        let downloaded = 0;
+        let contentLength = 0;
+        // alternatively we could also call update.download() and update.install() separately
+        await update.downloadAndInstall((event) => {
+          switch (event.event) {
+            case "Started":
+              //@ts-expect-error
+              contentLength = event.data.contentLength;
+              console.log(
+                `started downloading ${event.data.contentLength} bytes`
+              );
+              break;
+            case "Progress":
+              downloaded += event.data.chunkLength;
+              console.log(`downloaded ${downloaded} from ${contentLength}`);
+              break;
+            case "Finished":
+              console.log("download finished");
+              break;
+          }
+        });
+
+        toast("Update ready, restarting...");
+        await relaunch();
+      }
+    })();
+  }, []);
 
   return (
     <main className="bg-background dark min-h-screen flex flex-col">

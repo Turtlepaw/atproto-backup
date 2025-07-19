@@ -2,7 +2,7 @@ import { Agent } from "@atproto/api";
 import { BackupAgent } from "./backup";
 import { settingsManager } from "./settings";
 
-export class AutoBackupScheduler {
+export class TestAutoBackupScheduler {
   private agent: Agent;
   private intervalId: NodeJS.Timeout | null = null;
   private isRunning = false;
@@ -15,10 +15,10 @@ export class AutoBackupScheduler {
     if (this.isRunning) return;
 
     this.isRunning = true;
-    // Check every hour if a backup is needed
+    // Check every 30 seconds for testing (instead of 1 hour)
     this.intervalId = setInterval(() => {
       this.checkAndPerformBackup();
-    }, 60 * 60 * 1000); // 1 hour
+    }, 30 * 1000); // 30 seconds
 
     // Also check immediately when starting
     this.checkAndPerformBackup();
@@ -37,8 +37,10 @@ export class AutoBackupScheduler {
       const shouldBackup = await this.shouldPerformBackup();
 
       if (shouldBackup) {
-        console.log("Automatic backup due, starting backup...");
+        console.log("🧪 TEST: Automatic backup due, starting backup...");
         await this.performBackup();
+      } else {
+        console.log("🧪 TEST: No backup needed yet");
       }
     } catch (error) {
       console.error("Error in automatic backup check:", error);
@@ -51,7 +53,7 @@ export class AutoBackupScheduler {
       const frequency = await settingsManager.getBackupFrequency();
 
       if (!lastBackupDate) {
-        // No previous backup, so we should do one
+        console.log("🧪 TEST: No previous backup, should do one");
         return true;
       }
 
@@ -59,14 +61,23 @@ export class AutoBackupScheduler {
       const now = new Date();
       const timeDiff = now.getTime() - lastBackup.getTime();
 
+      // For testing: use shorter intervals
       if (frequency === "daily") {
-        // Check if 24 hours have passed
-        const oneDay = 24 * 60 * 60 * 1000;
-        return timeDiff >= oneDay;
+        // Test with 1 minute instead of 24 hours
+        const oneMinute = 60 * 1000;
+        const shouldBackup = timeDiff >= oneMinute;
+        console.log(
+          `🧪 TEST: Daily backup check - ${timeDiff}ms since last backup, need ${oneMinute}ms`
+        );
+        return shouldBackup;
       } else if (frequency === "weekly") {
-        // Check if 7 days have passed
-        const oneWeek = 7 * 24 * 60 * 60 * 1000;
-        return timeDiff >= oneWeek;
+        // Test with 2 minutes instead of 7 days
+        const twoMinutes = 2 * 60 * 1000;
+        const shouldBackup = timeDiff >= twoMinutes;
+        console.log(
+          `🧪 TEST: Weekly backup check - ${timeDiff}ms since last backup, need ${twoMinutes}ms`
+        );
+        return shouldBackup;
       }
 
       return false;
@@ -78,15 +89,16 @@ export class AutoBackupScheduler {
 
   private async performBackup(): Promise<void> {
     try {
+      console.log("🧪 TEST: Starting automatic backup...");
       const manager = new BackupAgent(this.agent);
       await manager.startBackup();
 
       // Update the last backup date
       await settingsManager.setLastBackupDate(new Date().toISOString());
 
-      console.log("Automatic backup completed successfully");
+      console.log("🧪 TEST: Automatic backup completed successfully");
     } catch (error) {
-      console.error("Automatic backup failed:", error);
+      console.error("🧪 TEST: Automatic backup failed:", error);
     }
   }
 }

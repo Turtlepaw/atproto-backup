@@ -47,7 +47,7 @@ export default function Settings({ onBack }: SettingsProps) {
           variant="ghost"
           size="sm"
           onClick={onBack}
-          className="text-white/80 hover:text-white"
+          className="text-white/80 hover:text-white cursor-pointer"
         >
           <ArrowLeft className="w-4 h-4 mr-2" />
           Back
