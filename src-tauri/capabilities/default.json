@@ -51,6 +51,7 @@
     "autostart:allow-enable",
     "autostart:allow-disable",
     "autostart:allow-is-enabled",
-    "updater:default"
+    "updater:default",
+    "core:window:allow-hide"
   ]
 }

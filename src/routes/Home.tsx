@@ -321,12 +321,6 @@ function Backups({ refreshTrigger }: { refreshTrigger: number }) {
                           {getRelativeTime(new Date(backup.timestamp))} (
                           {new Date(backup.timestamp).toLocaleString()})
                         </span>
-                        <span>•</span>
-                        <span>{formatBytes(backup.stats?.fileSize || 0)}</span>
-                        <span>•</span>
-                        <span className="font-semibold text-white/90">
-                          {backup.stats?.collections.length || 0} collections
-                        </span>
                       </div>
                     </div>
                     <div

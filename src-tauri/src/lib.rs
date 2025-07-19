@@ -1,11 +1,14 @@
-use tauri::{Emitter, Manager};
+use tauri::{
+    tray::{MouseButton, MouseButtonState, TrayIconEvent},
+    Emitter, Manager,
+};
 // Learn more about Tauri commands at https://tauri.app/develop/calling-rust/
 use tauri_plugin_deep_link::DeepLinkExt;
 
 mod background;
 mod tray;
 use background::{start_background_scheduler, stop_background_scheduler};
-use tray::{create_system_tray};
+use tray::create_system_tray;
 
 #[tauri::command]
 fn greet(name: &str) -> String {
@@ -50,9 +53,27 @@ pub fn run() {
                 app.emit("perform-backup", ()).unwrap();
             }
             _ => {
-              println!("menu item {:?} not handled", event.id);
+                println!("menu item {:?} not handled", event.id);
             }
-          })
+        })
+        .on_tray_icon_event(|tray, event| match event {
+            TrayIconEvent::Click {
+                button: MouseButton::Left,
+                button_state: MouseButtonState::Up,
+                ..
+            } => {
+                println!("left click pressed and released");
+                // in this example, let's show and focus the main window when the tray is clicked
+                let app = tray.app_handle();
+                if let Some(window) = app.get_webview_window("main") {
+                    let _ = window.show();
+                    let _ = window.set_focus();
+                }
+            }
+            _ => {
+                println!("unhandled event {event:?}");
+            }
+        })
         .setup(|app| {
             #[cfg(any(windows, target_os = "linux"))]
             {

@@ -172,7 +172,7 @@ function AppContent() {
   return (
     <main className="bg-background dark min-h-screen flex flex-col">
       <div className="titlebar" data-tauri-drag-region>
-        <div className="controls">
+        <div className="controls pr-[4px]">
           <Button
             variant="ghost"
             id="titlebar-minimize"
@@ -210,7 +210,7 @@ function AppContent() {
             id="titlebar-close"
             title="close"
             onClick={() => {
-              appWindow.close();
+              appWindow.hide();
             }}
           >
             <svg
