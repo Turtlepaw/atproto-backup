@@ -22,7 +22,6 @@ import {
   Heart,
   History,
   Images,
-  Info,
   LoaderCircleIcon,
   Package,
   Settings as SettingsIcon,
@@ -32,11 +31,6 @@ import {
 import { useEffect, useRef, useState } from "react";
 import { toast } from "sonner";
 import Settings from "./Settings";
-import {
-  Tooltip,
-  TooltipContent,
-  TooltipTrigger,
-} from "@/components/ui/tooltip.tsx";
 
 export function Home({
   profile,
