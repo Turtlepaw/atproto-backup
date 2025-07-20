@@ -161,7 +161,7 @@ function AppContent() {
 
   return (
     <main className="bg-background dark min-h-screen flex flex-col">
-      <div className="titlebar" data-tauri-drag-region>
+      <div className="titlebar hide-scroll" data-tauri-drag-region>
         <div className="controls pr-[4px]">
           <Button
             variant="ghost"
