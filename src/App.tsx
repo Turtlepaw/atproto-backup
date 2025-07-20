@@ -145,15 +145,27 @@ function AppContent() {
   // }, [isAuthenticated, agent]);
 
   useEffect(() => {
-    (async () => {
+    const checkUpdates = async () => {
       const update = await check();
       if (update) {
         console.log(
           `found update ${update.version} from ${update.date} with notes ${update.body}`
         );
         setUpdate(update);
+      } else {
+        console.log("no updates");
       }
-    })();
+    };
+
+    checkUpdates();
+    const unlistenVisible = appWindow.listen("tauri://focus", () => {
+      checkUpdates();
+    });
+
+    return () => {
+      // Cleanup listeners
+      unlistenVisible.then((unlisten) => unlisten());
+    };
   }, []);
 
   return (
