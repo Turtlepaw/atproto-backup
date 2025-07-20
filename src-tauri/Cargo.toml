@@ -1,8 +1,8 @@
 [package]
-name = "atproto-backup"
-version = "0.1.0"
-description = "A Tauri App"
-authors = ["you"]
+name = "atbackup"
+version = "0.1.1"
+description = "One-click bluesky backups"
+authors = ["Turtlepaw"]
 edition = "2021"
 
 # See more keys and their definitions at https://doc.rust-lang.org/cargo/reference/manifest.html
@@ -19,7 +19,7 @@ tauri-build = { version = "2", features = [] }
 tauri = { version = "2.0.0", features = [ "tray-icon" ] }
 
 [dependencies]
-tauri = { version = "2", features = ["tray-icon"] }
+tauri = { version = "2", features = ["tray-icon", "devtools"] }
 tauri-plugin-opener = "2"
 serde = { version = "1", features = ["derive"] }
 serde_json = "1"
@@ -39,6 +39,9 @@ tauri-plugin-single-instance = { version = "2.0.0", features = ["deep-link"] }
 tauri-plugin-autostart = "2"
 tauri-plugin-updater = "2"
 
-# Optimize for smaller binary size
 [profile.release]
 debug = true
+
+[profile.release.package.wry]
+debug = true
+debug-assertions = true
