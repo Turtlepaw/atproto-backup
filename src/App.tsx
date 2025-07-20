@@ -160,7 +160,7 @@ function AppContent() {
   }, []);
 
   return (
-    <main className="bg-background dark min-h-screen flex flex-col">
+    <>
       <div className="titlebar hide-scroll" data-tauri-drag-region>
         <div className="controls pr-[4px]">
           <Button
@@ -217,92 +217,95 @@ function AppContent() {
           </Button>
         </div>
       </div>
+      <div className="flex flex-col h-screen overflow-hidden">
+        <main className="flex-1 overflow-y-auto custom-scroll">
+          <Dialog
+            open={update != null}
+            onOpenChange={(it) => {
+              if (it == false) setUpdate(null);
+            }}
+          >
+            {/* <DialogTrigger>Open</DialogTrigger> */}
+            <DialogContent>
+              <DialogHeader>
+                <DialogTitle>
+                  New update available ({update?.currentVersion} ➜{" "}
+                  {update?.version})
+                </DialogTitle>
+                <DialogDescription>
+                  <MarkdownRenderer
+                    children={update?.body ?? "No details provided"}
+                  />
+                </DialogDescription>
+                <DialogFooter className="mt-4">
+                  {downloadProgress == null ? (
+                    <>
+                      <DialogClose asChild className="cursor-pointer">
+                        <Button variant="outline">Skip</Button>
+                      </DialogClose>
+                      <Button
+                        className="cursor-pointer"
+                        onClick={async () => {
+                          if (update == null) toast("Failed: update not found");
+                          toast("Downloading new update...");
+                          let downloaded = 0;
+                          let contentLength = 0;
+                          // alternatively we could also call update.download() and update.install() separately
+                          await update!!.downloadAndInstall((event) => {
+                            switch (event.event) {
+                              case "Started":
+                                //@ts-expect-error
+                                contentLength = event.data.contentLength;
+                                setDownloadProgress(0);
+                                console.log(
+                                  `started downloading ${event.data.contentLength} bytes`
+                                );
+                                break;
+                              case "Progress":
+                                downloaded += event.data.chunkLength;
+                                setDownloadProgress(downloaded / contentLength);
+                                console.log(
+                                  `downloaded ${downloaded} from ${contentLength}`
+                                );
+                                break;
+                              case "Finished":
+                                setDownloadProgress(100);
+                                console.log("download finished");
+                                break;
+                            }
+                          });
 
-      <Dialog
-        open={update != null}
-        onOpenChange={(it) => {
-          if (it == false) setUpdate(null);
-        }}
-      >
-        {/* <DialogTrigger>Open</DialogTrigger> */}
-        <DialogContent>
-          <DialogHeader>
-            <DialogTitle>
-              New update available ({update?.currentVersion} ➜ {update?.version}
-              )
-            </DialogTitle>
-            <DialogDescription>
-              <MarkdownRenderer
-                children={update?.body ?? "No details provided"}
-              />
-            </DialogDescription>
-            <DialogFooter className="mt-4">
-              {downloadProgress == null ? (
-                <>
-                  <DialogClose asChild className="cursor-pointer">
-                    <Button variant="outline">Skip</Button>
-                  </DialogClose>
-                  <Button
-                    className="cursor-pointer"
-                    onClick={async () => {
-                      if (update == null) toast("Failed: update not found");
-                      toast("Downloading new update...");
-                      let downloaded = 0;
-                      let contentLength = 0;
-                      // alternatively we could also call update.download() and update.install() separately
-                      await update!!.downloadAndInstall((event) => {
-                        switch (event.event) {
-                          case "Started":
-                            //@ts-expect-error
-                            contentLength = event.data.contentLength;
-                            setDownloadProgress(0);
-                            console.log(
-                              `started downloading ${event.data.contentLength} bytes`
-                            );
-                            break;
-                          case "Progress":
-                            downloaded += event.data.chunkLength;
-                            setDownloadProgress(downloaded / contentLength);
-                            console.log(
-                              `downloaded ${downloaded} from ${contentLength}`
-                            );
-                            break;
-                          case "Finished":
-                            setDownloadProgress(100);
-                            console.log("download finished");
-                            break;
-                        }
-                      });
+                          toast("Update ready, restarting...");
+                          await relaunch();
+                        }}
+                      >
+                        Download
+                      </Button>
+                    </>
+                  ) : (
+                    <Progress value={downloadProgress} className="w-full" />
+                  )}
+                </DialogFooter>
+              </DialogHeader>
+            </DialogContent>
+          </Dialog>
 
-                      toast("Update ready, restarting...");
-                      await relaunch();
-                    }}
-                  >
-                    Download
-                  </Button>
-                </>
-              ) : (
-                <Progress value={downloadProgress} className="w-full" />
-              )}
-            </DialogFooter>
-          </DialogHeader>
-        </DialogContent>
-      </Dialog>
+          <ScrollArea>
+            {isLoading || !isLocalStorageReady ? (
+              <div className="fixed inset-0 flex items-center justify-center">
+                <LoaderCircleIcon className="animate-spin text-white/80" />
+              </div>
+            ) : isAuthenticated ? (
+              <Home profile={profile!!} onLogout={logout} />
+            ) : (
+              <LoginPage onLogin={login} client={client} />
+            )}
+          </ScrollArea>
 
-      <ScrollArea>
-        {isLoading || !isLocalStorageReady ? (
-          <div className="fixed inset-0 flex items-center justify-center">
-            <LoaderCircleIcon className="animate-spin text-white/80" />
-          </div>
-        ) : isAuthenticated ? (
-          <Home profile={profile!!} onLogout={logout} />
-        ) : (
-          <LoginPage onLogin={login} client={client} />
-        )}
-      </ScrollArea>
-
-      <Toaster />
-    </main>
+          <Toaster />
+        </main>
+      </div>
+    </>
   );
 }
 

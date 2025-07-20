@@ -192,25 +192,28 @@
 }
 
 /* width */
-::-webkit-scrollbar {
+.custom-scroll {
+  margin-right: 3px;
+}
+
+.custom-scroll::-webkit-scrollbar {
   width: 5px;
-  margin-right: 5px;
 }
 
 /* Track */
-::-webkit-scrollbar-track {
+.custom-scroll::-webkit-scrollbar-track {
   background: var(--background);
 }
 
 /* Handle */
-::-webkit-scrollbar-thumb {
-  background: rgba(225, 225, 225, 0.2);
-  border-radius: 100px;
+.custom-scroll::-webkit-scrollbar-thumb {
+  background: rgba(225, 225, 225, 0.15);
+  border-radius: 500px;
 }
 
 /* Handle on hover */
-::-webkit-scrollbar-thumb:hover {
-  background: rgba(225, 225, 225, 0.3);
+.custom-scroll::-webkit-scrollbar-thumb:hover {
+  background: rgba(225, 225, 225, 0.2);
 }
 
 .hide-scroll::-webkit-scrollbar {
