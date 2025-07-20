@@ -12,12 +12,24 @@ import { toast, Toaster } from "sonner";
 import { ScrollArea } from "./components/ui/scroll-area";
 import { BackupAgent } from "./lib/backup";
 import { settingsManager } from "./lib/settings";
-import { check } from "@tauri-apps/plugin-updater";
+import { check, Update } from "@tauri-apps/plugin-updater";
 import { relaunch } from "@tauri-apps/plugin-process";
 import {
   BackgroundBackupService,
   handleBackgroundBackup,
 } from "./lib/backgroundBackup";
+import {
+  Dialog,
+  DialogClose,
+  DialogContent,
+  DialogDescription,
+  DialogFooter,
+  DialogHeader,
+  DialogTitle,
+  DialogTrigger,
+} from "@/components/ui/dialog";
+import { Progress } from "./components/ui/progress";
+import { MarkdownRenderer } from "./components/ui/markdown-renderer";
 
 function AppContent() {
   const { isLoading, isAuthenticated, profile, client, login, logout, agent } =
@@ -25,6 +37,8 @@ function AppContent() {
   const appWindow = getCurrentWindow();
 
   const [isLocalStorageReady, setIsLocalStorageReady] = useState(false);
+  const [update, setUpdate] = useState<Update | null>(null);
+  const [downloadProgress, setDownloadProgress] = useState<number | null>(null);
 
   useEffect(() => {
     const initStorage = async () => {
@@ -67,71 +81,71 @@ function AppContent() {
   }, [isAuthenticated, agent]);
 
   // Auto-backup functionality (for when app is open)
-  useEffect(() => {
-    if (!isAuthenticated || !agent) return;
+  // useEffect(() => {
+  //   if (!isAuthenticated || !agent) return;
 
-    let intervalId: ReturnType<typeof setInterval> | null = null;
+  //   let intervalId: ReturnType<typeof setInterval> | null = null;
 
-    const checkAndPerformBackup = async () => {
-      try {
-        const lastBackupDate = await settingsManager.getLastBackupDate();
-        const frequency = await settingsManager.getBackupFrequency();
+  //   const checkAndPerformBackup = async () => {
+  //     try {
+  //       const lastBackupDate = await settingsManager.getLastBackupDate();
+  //       const frequency = await settingsManager.getBackupFrequency();
 
-        if (!lastBackupDate) {
-          // No previous backup, so we should do one
-          await performBackup();
-          return;
-        }
+  //       if (!lastBackupDate) {
+  //         // No previous backup, so we should do one
+  //         await performBackup();
+  //         return;
+  //       }
 
-        const lastBackup = new Date(lastBackupDate);
-        const now = new Date();
-        const timeDiff = now.getTime() - lastBackup.getTime();
+  //       const lastBackup = new Date(lastBackupDate);
+  //       const now = new Date();
+  //       const timeDiff = now.getTime() - lastBackup.getTime();
 
-        if (frequency === "daily") {
-          // Check if 24 hours have passed
-          const oneDay = 24 * 60 * 60 * 1000;
-          if (timeDiff >= oneDay) {
-            await performBackup();
-          }
-        } else if (frequency === "weekly") {
-          // Check if 7 days have passed
-          const oneWeek = 7 * 24 * 60 * 60 * 1000;
-          if (timeDiff >= oneWeek) {
-            await performBackup();
-          }
-        }
-      } catch (error) {
-        console.error("Error in automatic backup check:", error);
-      }
-    };
+  //       if (frequency === "daily") {
+  //         // Check if 24 hours have passed
+  //         const oneDay = 24 * 60 * 60 * 1000;
+  //         if (timeDiff >= oneDay) {
+  //           await performBackup();
+  //         }
+  //       } else if (frequency === "weekly") {
+  //         // Check if 7 days have passed
+  //         const oneWeek = 7 * 24 * 60 * 60 * 1000;
+  //         if (timeDiff >= oneWeek) {
+  //           await performBackup();
+  //         }
+  //       }
+  //     } catch (error) {
+  //       console.error("Error in automatic backup check:", error);
+  //     }
+  //   };
 
-    const performBackup = async () => {
-      try {
-        console.log("Automatic backup due, starting backup...");
-        const manager = new BackupAgent(agent);
-        await manager.startBackup();
+  //   const performBackup = async () => {
+  //     try {
+  //       console.log("Automatic backup due, starting backup...");
+  //       const manager = new BackupAgent(agent);
+  //       await manager.startBackup();
 
-        // Update the last backup date
-        await settingsManager.setLastBackupDate(new Date().toISOString());
+  //       // Update the last backup date
+  //       await settingsManager.setLastBackupDate(new Date().toISOString());
 
-        console.log("Automatic backup completed successfully");
-      } catch (error) {
-        console.error("Automatic backup failed:", error);
-      }
-    };
+  //       console.log("Automatic backup completed successfully");
+  //     } catch (error) {
+  //       console.error("Automatic backup failed:", error);
+  //     }
+  //   };
 
-    // Check immediately when authenticated
-    checkAndPerformBackup();
+  //   // Check immediately when authenticated
+  //   checkAndPerformBackup();
 
-    // Set up interval to check every hour
-    intervalId = setInterval(checkAndPerformBackup, 60 * 60 * 1000);
+  //   // Set up interval to check every hour
+  //   intervalId = setInterval(checkAndPerformBackup, 60 * 60 * 1000);
 
-    return () => {
-      if (intervalId) {
-        clearInterval(intervalId);
-      }
-    };
-  }, [isAuthenticated, agent]);
+  //   return () => {
+  //     if (intervalId) {
+  //       clearInterval(intervalId);
+  //     }
+  //   };
+  // }, [isAuthenticated, agent]);
 
   useEffect(() => {
     (async () => {
@@ -140,31 +154,7 @@ function AppContent() {
         console.log(
           `found update ${update.version} from ${update.date} with notes ${update.body}`
         );
-        toast("Downloading new update...");
-        let downloaded = 0;
-        let contentLength = 0;
-        // alternatively we could also call update.download() and update.install() separately
-        await update.downloadAndInstall((event) => {
-          switch (event.event) {
-            case "Started":
-              //@ts-expect-error
-              contentLength = event.data.contentLength;
-              console.log(
-                `started downloading ${event.data.contentLength} bytes`
-              );
-              break;
-            case "Progress":
-              downloaded += event.data.chunkLength;
-              console.log(`downloaded ${downloaded} from ${contentLength}`);
-              break;
-            case "Finished":
-              console.log("download finished");
-              break;
-          }
-        });
-
-        toast("Update ready, restarting...");
-        await relaunch();
+        setUpdate(update);
       }
     })();
   }, []);
@@ -227,6 +217,77 @@ function AppContent() {
           </Button>
         </div>
       </div>
+
+      <Dialog
+        open={update != null}
+        onOpenChange={(it) => {
+          if (it == false) setUpdate(null);
+        }}
+      >
+        {/* <DialogTrigger>Open</DialogTrigger> */}
+        <DialogContent>
+          <DialogHeader>
+            <DialogTitle>
+              New update available ({update?.currentVersion} ➜ {update?.version}
+              )
+            </DialogTitle>
+            <DialogDescription>
+              <MarkdownRenderer
+                children={update?.body ?? "No details provided"}
+              />
+            </DialogDescription>
+            <DialogFooter className="mt-4">
+              {downloadProgress == null ? (
+                <>
+                  <DialogClose asChild className="cursor-pointer">
+                    <Button variant="outline">Skip</Button>
+                  </DialogClose>
+                  <Button
+                    className="cursor-pointer"
+                    onClick={async () => {
+                      if (update == null) toast("Failed: update not found");
+                      toast("Downloading new update...");
+                      let downloaded = 0;
+                      let contentLength = 0;
+                      // alternatively we could also call update.download() and update.install() separately
+                      await update!!.downloadAndInstall((event) => {
+                        switch (event.event) {
+                          case "Started":
+                            //@ts-expect-error
+                            contentLength = event.data.contentLength;
+                            setDownloadProgress(0);
+                            console.log(
+                              `started downloading ${event.data.contentLength} bytes`
+                            );
+                            break;
+                          case "Progress":
+                            downloaded += event.data.chunkLength;
+                            setDownloadProgress(downloaded / contentLength);
+                            console.log(
+                              `downloaded ${downloaded} from ${contentLength}`
+                            );
+                            break;
+                          case "Finished":
+                            setDownloadProgress(100);
+                            console.log("download finished");
+                            break;
+                        }
+                      });
+
+                      toast("Update ready, restarting...");
+                      await relaunch();
+                    }}
+                  >
+                    Download
+                  </Button>
+                </>
+              ) : (
+                <Progress value={downloadProgress} className="w-full" />
+              )}
+            </DialogFooter>
+          </DialogHeader>
+        </DialogContent>
+      </Dialog>
 
       <ScrollArea>
         {isLoading || !isLocalStorageReady ? (

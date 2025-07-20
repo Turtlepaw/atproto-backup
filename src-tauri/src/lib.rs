@@ -42,51 +42,51 @@ pub fn run() {
             start_background_scheduler,
             stop_background_scheduler
         ])
-        // .on_menu_event(|app, event| match event.id.as_ref() {
-        //     "quit" => {
-        //         std::process::exit(0);
-        //     }
-        //     "show" => {
-        //         let window = app.get_webview_window("main").unwrap();
-        //         window.show().unwrap();
-        //         window.set_focus().unwrap();
-        //     }
-        //     "hide" => {
-        //         let window = app.get_webview_window("main").unwrap();
-        //         window.hide().unwrap();
-        //     }
-        //     "backup_now" => {
-        //         // Emit event to trigger backup
-        //         app.emit("perform-backup", ()).unwrap();
-        //     }
-        //     _ => {
-        //         println!("menu item {:?} not handled", event.id);
-        //     }
-        // })
-        // .on_tray_icon_event(|tray, event| match event {
-        //     TrayIconEvent::Click {
-        //         button: MouseButton::Left,
-        //         button_state: MouseButtonState::Up,
-        //         ..
-        //     } => {
-        //         println!("left click pressed and released");
-        //         // in this example, let's show and focus the main window when the tray is clicked
-        //         let app = tray.app_handle();
-        //         if let Some(window) = app.get_webview_window("main") {
-        //             let _ = window.show();
-        //             let _ = window.set_focus();
-        //         }
-        //     }
-        //     _ => {
-        //         println!("unhandled event {event:?}");
-        //     }
-        // })
+        .on_menu_event(|app, event| match event.id.as_ref() {
+            "quit" => {
+                std::process::exit(0);
+            }
+            "show" => {
+                let window = app.get_webview_window("main").unwrap();
+                window.show().unwrap();
+                window.set_focus().unwrap();
+            }
+            "hide" => {
+                let window = app.get_webview_window("main").unwrap();
+                window.hide().unwrap();
+            }
+            "backup_now" => {
+                // Emit event to trigger backup
+                app.emit("perform-backup", ()).unwrap();
+            }
+            _ => {
+                println!("menu item {:?} not handled", event.id);
+            }
+        })
+        .on_tray_icon_event(|tray, event| match event {
+            TrayIconEvent::Click {
+                button: MouseButton::Left,
+                button_state: MouseButtonState::Up,
+                ..
+            } => {
+                println!("left click pressed and released");
+                // in this example, let's show and focus the main window when the tray is clicked
+                let app = tray.app_handle();
+                if let Some(window) = app.get_webview_window("main") {
+                    let _ = window.show();
+                    let _ = window.set_focus();
+                }
+            }
+            _ => {
+                println!("unhandled event {event:?}");
+            }
+        })
         .setup(|app| {
             #[cfg(any(windows, target_os = "linux"))]
             {
                 app.deep_link().register_all()?;
             }
-            //let tray = create_system_tray(app);
+            let tray = create_system_tray(app);
 
             Ok(())
         });
