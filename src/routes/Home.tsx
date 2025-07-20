@@ -22,6 +22,7 @@ import {
   Heart,
   History,
   Images,
+  Info,
   LoaderCircleIcon,
   Package,
   Settings as SettingsIcon,
@@ -31,6 +32,11 @@ import {
 import { useEffect, useRef, useState } from "react";
 import { toast } from "sonner";
 import Settings from "./Settings";
+import {
+  Tooltip,
+  TooltipContent,
+  TooltipTrigger,
+} from "@/components/ui/tooltip.tsx";
 
 export function Home({
   profile,
@@ -288,6 +294,10 @@ function Backups({ refreshTrigger }: { refreshTrigger: number }) {
       <div className="flex items-center gap-2 mb-4">
         <History className="w-5 h-5" />
         <p className="text-white text-lg font-semibold">Previous backups</p>
+
+        <p className="text-white/60">
+          (only the 3 most recent backups are saved)
+        </p>
       </div>
 
       {backups.length === 0 ? (

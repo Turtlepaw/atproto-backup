@@ -22,6 +22,7 @@
     "@radix-ui/react-scroll-area": "^1.2.9",
     "@radix-ui/react-slot": "^1.2.3",
     "@radix-ui/react-switch": "^1.2.5",
+    "@radix-ui/react-tooltip": "^1.2.7",
     "@tailwindcss/vite": "^4.1.11",
     "@tauri-apps/api": "^2",
     "@tauri-apps/plugin-autostart": "~2",
@@ -60,5 +61,6 @@
   },
   "trustedDependencies": [
     "@tailwindcss/oxide"
-  ]
+  ],
+  "packageManager": "yarn@1.22.21+sha1.1959a18351b811cdeedbd484a8f86c3cc3bbaf72"
 }

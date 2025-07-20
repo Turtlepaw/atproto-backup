@@ -17,7 +17,7 @@ fn greet(name: &str) -> String {
 
 #[cfg_attr(mobile, tauri::mobile_entry_point)]
 pub fn run() {
-    let mut builder = tauri::Builder::default()
+    let builder = tauri::Builder::default()
         .plugin(tauri_plugin_websocket::init())
         .plugin(tauri_plugin_shell::init())
         .plugin(tauri_plugin_process::init())
@@ -30,66 +30,66 @@ pub fn run() {
         .plugin(tauri_plugin_store::Builder::new().build())
         .plugin(tauri_plugin_deep_link::init())
         .plugin(tauri_plugin_opener::init())
+                .plugin(tauri_plugin_single_instance::init(|app, argv, cwd| {
+            println!("A new app instance was opened with {argv:?} and the deep link event was already triggered.");
+
+                        let _ = app.get_webview_window("main")
+                       .expect("no main window")
+                       .set_focus();
+        }))
         .invoke_handler(tauri::generate_handler![
             greet,
             start_background_scheduler,
             stop_background_scheduler
         ])
-        .on_menu_event(|app, event| match event.id.as_ref() {
-            "quit" => {
-                std::process::exit(0);
-            }
-            "show" => {
-                let window = app.get_webview_window("main").unwrap();
-                window.show().unwrap();
-                window.set_focus().unwrap();
-            }
-            "hide" => {
-                let window = app.get_webview_window("main").unwrap();
-                window.hide().unwrap();
-            }
-            "backup_now" => {
-                // Emit event to trigger backup
-                app.emit("perform-backup", ()).unwrap();
-            }
-            _ => {
-                println!("menu item {:?} not handled", event.id);
-            }
-        })
-        .on_tray_icon_event(|tray, event| match event {
-            TrayIconEvent::Click {
-                button: MouseButton::Left,
-                button_state: MouseButtonState::Up,
-                ..
-            } => {
-                println!("left click pressed and released");
-                // in this example, let's show and focus the main window when the tray is clicked
-                let app = tray.app_handle();
-                if let Some(window) = app.get_webview_window("main") {
-                    let _ = window.show();
-                    let _ = window.set_focus();
-                }
-            }
-            _ => {
-                println!("unhandled event {event:?}");
-            }
-        })
+        // .on_menu_event(|app, event| match event.id.as_ref() {
+        //     "quit" => {
+        //         std::process::exit(0);
+        //     }
+        //     "show" => {
+        //         let window = app.get_webview_window("main").unwrap();
+        //         window.show().unwrap();
+        //         window.set_focus().unwrap();
+        //     }
+        //     "hide" => {
+        //         let window = app.get_webview_window("main").unwrap();
+        //         window.hide().unwrap();
+        //     }
+        //     "backup_now" => {
+        //         // Emit event to trigger backup
+        //         app.emit("perform-backup", ()).unwrap();
+        //     }
+        //     _ => {
+        //         println!("menu item {:?} not handled", event.id);
+        //     }
+        // })
+        // .on_tray_icon_event(|tray, event| match event {
+        //     TrayIconEvent::Click {
+        //         button: MouseButton::Left,
+        //         button_state: MouseButtonState::Up,
+        //         ..
+        //     } => {
+        //         println!("left click pressed and released");
+        //         // in this example, let's show and focus the main window when the tray is clicked
+        //         let app = tray.app_handle();
+        //         if let Some(window) = app.get_webview_window("main") {
+        //             let _ = window.show();
+        //             let _ = window.set_focus();
+        //         }
+        //     }
+        //     _ => {
+        //         println!("unhandled event {event:?}");
+        //     }
+        // })
         .setup(|app| {
             #[cfg(any(windows, target_os = "linux"))]
             {
                 app.deep_link().register_all()?;
             }
-            let tray = create_system_tray(app);
+            //let tray = create_system_tray(app);
 
             Ok(())
         });
-
-    #[cfg(desktop)]
-    {
-        builder = builder.plugin(tauri_plugin_single_instance::init(|_app, argv, _cwd| {
-            println!("A new app instance was opened with {argv:?} and the deep link event was already triggered.");
-        }));
-    }
 
     builder
         .run(tauri::generate_context!())

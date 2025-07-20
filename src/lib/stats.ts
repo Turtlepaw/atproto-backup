@@ -13,7 +13,7 @@ export interface CarStats {
 export async function getCarStats(carData: Uint8Array): Promise<CarStats> {
   try {
     // Parse the CAR file
-    await using repo = RepoReader.fromUint8Array(carData);
+    const repo = RepoReader.fromUint8Array(carData);
 
     let totalBlocks = 0;
     let totalSize = 0;
@@ -29,7 +29,7 @@ export async function getCarStats(carData: Uint8Array): Promise<CarStats> {
         // Try to decode the block as a record
         if (record) {
           // Count different record types
-          const type = (record.record as any)["$type"]
+          const type = (record.record as any)["$type"];
           if (type) {
             recordTypes[type] = (recordTypes[type] || 0) + 1;
             recordCount++;

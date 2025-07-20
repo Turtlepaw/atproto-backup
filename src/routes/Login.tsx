@@ -26,6 +26,7 @@ export default function LoginPage({
   useEffect(() => {
     const initOAuthClient = async () => {
       try {
+        console.log("waiting for deep links");
         // Set up deep link handler
         await onOpenUrl(async (urls) => {
           console.log("deep link received:", urls);
