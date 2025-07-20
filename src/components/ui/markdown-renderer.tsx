@@ -1,7 +1,7 @@
 import React, { Suspense } from "react";
 import Markdown from "react-markdown";
 import remarkGfm from "remark-gfm";
-import type { ThemedToken, TokensResult } from "shiki";
+import type { ThemedToken } from "shiki";
 
 import { cn } from "@/lib/utils";
 import { CopyButton } from "@/components/ui/copy-button";

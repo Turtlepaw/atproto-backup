@@ -10,8 +10,6 @@ import { Home } from "./routes/Home";
 import { ThemeProvider } from "./theme-provider";
 import { toast, Toaster } from "sonner";
 import { ScrollArea } from "./components/ui/scroll-area";
-import { BackupAgent } from "./lib/backup";
-import { settingsManager } from "./lib/settings";
 import { check, Update } from "@tauri-apps/plugin-updater";
 import { relaunch } from "@tauri-apps/plugin-process";
 import {
@@ -26,7 +24,6 @@ import {
   DialogFooter,
   DialogHeader,
   DialogTitle,
-  DialogTrigger,
 } from "@/components/ui/dialog";
 import { Progress } from "./components/ui/progress";
 import { MarkdownRenderer } from "./components/ui/markdown-renderer";
