@@ -39,7 +39,6 @@ export function Home({
   profile: ProfileViewDetailed;
   onLogout: () => void;
 }) {
-  const [isDirLoading, setDirLoading] = useState(false);
   const [refreshTrigger, setRefreshTrigger] = useState(0);
   const [showSettings, setShowSettings] = useState(false);
 
@@ -96,42 +95,7 @@ export function Home({
 
       <div className="bg-card rounded-lg p-4 mb-4">
         <p className="mb-2 text-white">Backups</p>
-        <div className="flex gap-2">
-          <Button
-            variant="outline"
-            className="cursor-pointer"
-            onClick={async () => {
-              try {
-                setDirLoading(true);
-                await createBackupDir();
-                const appDataDirPath = await getBackupDir();
-                openPath(appDataDirPath);
-              } finally {
-                setDirLoading(false);
-              }
-            }}
-            disabled={isDirLoading}
-          >
-            {isDirLoading ? (
-              <LoaderCircleIcon className="w-4 h-4 animate-spin mr-2" />
-            ) : (
-              <FolderOpen className="w-4 h-4 mr-2" />
-            )}
-            Open backups
-          </Button>
-
-          <StartBackup onBackupComplete={handleBackupComplete} />
-
-          {/* <Button
-            variant="outline"
-            className="cursor-pointer"
-            onClick={async () => {
-              await BackgroundTestService.testBackgroundBackup();
-            }}
-          >
-            Test Background
-          </Button> */}
-        </div>
+        <StartBackup onBackupComplete={handleBackupComplete} />
       </div>
 
       <Backups refreshTrigger={refreshTrigger} />
@@ -142,48 +106,121 @@ export function Home({
 function StartBackup({ onBackupComplete }: { onBackupComplete: () => void }) {
   const [isLoading, setIsLoading] = useState(false);
   const [stage, setStage] = useState<BackupStage | null>(null);
-  const [_, setProgress] = useState<number | undefined>();
+  const [progress, setProgress] = useState<number | undefined>();
+  const [isDirLoading, setDirLoading] = useState(false);
   const { agent } = useAuth();
 
+  const formatStage = (stage: BackupStage | null): string => {
+    if (!stage) return "Initializing backup...";
+
+    switch (stage) {
+      case "blobs":
+        return "Downloading blobs...";
+      case "cleanup":
+        return "Cleaning up...";
+      case "complete":
+        return "Backup complete!";
+      case "fetching":
+        return "Downloading account archive...";
+      case "writing":
+        return "Downloading account archive...";
+      default:
+        return "Processing...";
+    }
+  };
+
   return (
-    <Button
-      variant="outline"
-      className="cursor-pointer"
-      onClick={async () => {
-        try {
-          setIsLoading(true);
-          if (agent == null) {
-            toast("Agent not initialized, try to reload the app.");
-            return;
-          }
-          const manager = new BackupAgent(agent!!, {
-            onProgress: (progress) => {
-              setStage(progress.stage);
-              setProgress(progress.progress);
-            },
-          });
-          await manager.startBackup();
-          await settingsManager.setLastBackupDate(new Date().toISOString());
-          toast("Backup complete!");
-          onBackupComplete(); // Trigger refresh
-        } catch (err: any) {
-          toast(err.toString());
-          console.error(err);
-        } finally {
-          setIsLoading(false);
-        }
-      }}
-      disabled={isLoading}
-    >
-      {isLoading ? (
-        <>
-          <LoaderCircleIcon className="animate-spin text-white/80" />
-          <span className="capitalize">{stage}</span>
-        </>
-      ) : (
-        <span>Backup now</span>
+    <div className="space-y-4">
+      <div className="flex gap-2">
+        <Button
+          variant="outline"
+          className="cursor-pointer"
+          onClick={async () => {
+            try {
+              setDirLoading(true);
+              await createBackupDir();
+              const appDataDirPath = await getBackupDir();
+              openPath(appDataDirPath);
+            } finally {
+              setDirLoading(false);
+            }
+          }}
+          disabled={isDirLoading}
+        >
+          {isDirLoading ? (
+            <LoaderCircleIcon className="w-4 h-4 animate-spin mr-2" />
+          ) : (
+            <FolderOpen className="w-4 h-4 mr-2" />
+          )}
+          Open backups
+        </Button>
+
+        <Button
+          variant="outline"
+          className="cursor-pointer"
+          onClick={async () => {
+            try {
+              setIsLoading(true);
+              if (agent == null) {
+                toast("Agent not initialized, try to reload the app.");
+                return;
+              }
+
+              const manager = new BackupAgent(agent!!, {
+                onProgress: (progress) => {
+                  setStage(progress.stage);
+                  setProgress(progress.progress);
+                },
+              });
+              await manager.startBackup();
+              await settingsManager.setLastBackupDate(new Date().toISOString());
+              toast("Backup complete!");
+              onBackupComplete();
+            } catch (err: any) {
+              toast(err.toString());
+              console.error(err);
+            } finally {
+              setIsLoading(false);
+              setStage(null);
+              setProgress(undefined);
+            }
+          }}
+          disabled={isLoading}
+        >
+          {isLoading ? (
+            <>
+              <LoaderCircleIcon className="w-4 h-4 animate-spin mr-2" />
+              Backing up...
+            </>
+          ) : (
+            "Backup now"
+          )}
+        </Button>
+      </div>
+
+      {/* Clean backup progress card with animations */}
+      {isLoading && (
+        <div className="bg-card border rounded-lg p-4 animate-in slide-in-from-top-2 duration-300">
+          <div className="flex items-center justify-between mb-3">
+            <div className="flex items-center gap-3">
+              <div className="w-8 h-8 rounded-md bg-primary/10 flex items-center justify-center">
+                <HardDrive className="w-4 h-4 text-primary animate-pulse" />
+              </div>
+              <div>
+                <h3 className="font-medium">{formatStage(stage)}</h3>
+              </div>
+            </div>
+          </div>
+
+          <div className="space-y-1.5">
+            <Progress
+              value={progress}
+              className="h-2 transition-all duration-500 ease-out"
+            />
+          </div>
+        </div>
       )}
-    </Button>
+    </div>
   );
 }
 
