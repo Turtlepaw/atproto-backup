@@ -13,7 +13,7 @@ import { BackupAgent, BackupStage, Metadata } from "@/lib/backup";
 import { createBackupDir, getBackupDir } from "@/lib/paths";
 import { settingsManager } from "@/lib/settings";
 import { ProfileViewDetailed } from "@atproto/api/dist/client/types/app/bsky/actor/defs";
-import { openPath } from "@tauri-apps/plugin-opener";
+import { openPath, openUrl } from "@tauri-apps/plugin-opener";
 import {
   ChevronDown,
   FileText,
@@ -25,12 +25,23 @@ import {
   LoaderCircleIcon,
   Package,
   Settings as SettingsIcon,
+  SquareArrowOutUpRight,
   User,
   Users,
 } from "lucide-react";
 import { useEffect, useRef, useState } from "react";
 import { toast } from "sonner";
 import Settings from "./Settings";
+import {
+  Dialog,
+  DialogClose,
+  DialogContent,
+  DialogDescription,
+  DialogFooter,
+  DialogHeader,
+  DialogTitle,
+  DialogTrigger,
+} from "@/components/ui/dialog";
 
 export function Home({
   profile,
@@ -451,15 +462,60 @@ function Backups({ refreshTrigger }: { refreshTrigger: number }) {
                             <div className="flex items-center justify-between mb-2">
                               <div className="flex items-center gap-2">
                                 {getRecordTypeIcon(type)}
-                                <span className="text-white/80 text-sm font-medium">
-                                  {type}
-                                </span>
+                                <Dialog>
+                                  <DialogTrigger className="gap-2 p-0 text-inherit hover:underline flex items-center cursor-pointer">
+                                    <span className="text-white/80 text-sm font-medium">
+                                      {type}
+                                    </span>
+                                  </DialogTrigger>
+                                  <DialogContent>
+                                    <DialogHeader>
+                                      <DialogTitle>
+                                        Open link in browser
+                                      </DialogTitle>
+                                      <DialogDescription>
+                                        This will open the URL in your browser:
+                                        <div className="border-[1.8px] border-[--secondary] rounded-sm px-3 py-2 mt-3 text-base">
+                                          https://
+                                          <span className="font-semibold">
+                                            {getUrlFromNamespace(type)}
+                                          </span>
+                                        </div>
+                                      </DialogDescription>
+                                      <DialogFooter>
+                                        <DialogClose>
+                                          <Button
+                                            variant="outline"
+                                            className="cursor-pointer"
+                                          >
+                                            Cancel
+                                          </Button>
+                                        </DialogClose>
+                                        <DialogClose>
+                                          <Button
+                                            onClick={() =>
+                                              openUrl(
+                                                `https://${getUrlFromNamespace(
+                                                  type
+                                                )}`
+                                              )
+                                            }
+                                            className="cursor-pointer"
+                                          >
+                                            Open{" "}
+                                            <SquareArrowOutUpRight size={14} />
+                                          </Button>
+                                        </DialogClose>
+                                      </DialogFooter>
+                                    </DialogHeader>
+                                  </DialogContent>
+                                </Dialog>
                               </div>
                               <div className="flex items-center gap-2">
                                 <span className="text-white font-semibold">
                                   {count.toLocaleString()}
                                 </span>
-                                <span className="text-white/60 text-xs">
+                                <span className="text-white/60 text-sm">
                                   ({percentage.toFixed(1)}%)
                                 </span>
                               </div>
@@ -478,4 +534,12 @@ function Backups({ refreshTrigger }: { refreshTrigger: number }) {
       )}
     </div>
   );
+}
+
+function getUrlFromNamespace(type: string) {
+  const parts = type.split(".");
+  if (parts.length >= 2) {
+    return `${parts[1]}.${parts[0]}`;
+  }
+  return type; // Not enough parts to swap
 }
