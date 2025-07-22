@@ -5,10 +5,35 @@ import "nextra-theme-docs/style.css";
 import "./app.css";
 import Image from "next/image";
 import Link from "next/link";
+import { Metadata } from "next";
 
-export const metadata = {
-  // Define your metadata here
-  // For more information on metadata API, see: https://nextjs.org/docs/app/building-your-application/optimizing/metadata
+export const metadata: Metadata = {
+  description: "One-click backup for Bluesky",
+  metadataBase: new URL("https://atbackup.pages.dev"),
+  keywords: ["Bluesky", "AT Backup", "Backup"],
+  generator: "Next.js",
+  applicationName: "AT Backup",
+  appleWebApp: {
+    title: "AT Backup",
+  },
+  title: {
+    default: "AT Backup – One-click backup for Bluesky",
+    template: "%s | AT Backup",
+  },
+  openGraph: {
+    // https://github.com/vercel/next.js/discussions/50189#discussioncomment-10826632
+    url: "./",
+    siteName: "AT Backup",
+    locale: "en_US",
+    type: "website",
+  },
+  other: {
+    "msapplication-TileColor": "#fff",
+  },
+  alternates: {
+    // https://github.com/vercel/next.js/discussions/50189#discussioncomment-10826632
+    canonical: "./",
+  },
 };
 
 const banner = <Banner storageKey="some-key">Nextra 4.0 is released 🎉</Banner>;
@@ -20,6 +45,7 @@ const navbar = (
         <span>AT Backup</span>
       </div>
     }
+    projectLink="https://github.com/turtlepaw/atproto-backup"
     // ... Your additional navbar options
   />
 );

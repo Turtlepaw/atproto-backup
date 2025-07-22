@@ -128,6 +128,8 @@ function VideoPlayer({ className = "" }: { className?: string }) {
     };
   }, []);
 
+  const Component = playing ? Pause : Play;
+
   return (
     <div
       className={`relative flex flex-col items-center ${className}`}
@@ -142,11 +144,11 @@ function VideoPlayer({ className = "" }: { className?: string }) {
       />
       <button
         onClick={togglePlay}
-        className="absolute bottom-3 right-3 p-3 bg-black/15 border-[1px] border-white/10 backdrop-blur-sm rounded-[100rem] hover:bg-black/5 transition cursor-pointer"
+        className="absolute bottom-3 right-3 p-2 bg-black/80 border-[1px] border-white/10 backdrop-blur-sm rounded-[100rem] hover:bg-black/50 transition cursor-pointer"
         aria-label={playing ? "Pause video" : "Play video"}
         style={{ pointerEvents: "auto" }}
       >
-        {playing ? <Pause /> : <Play />}
+        <Component className="text-white" width={20} height={20} />
       </button>
     </div>
   );
