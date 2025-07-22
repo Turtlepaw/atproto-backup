@@ -86,6 +86,10 @@ pub fn run() {
             {
                 app.deep_link().register_all()?;
             }
+
+            #[cfg(target_os = "macos")]
+            app.set_activation_policy(tauri::ActivationPolicy::Accessory);
+
             let tray = create_system_tray(app);
 
             Ok(())
