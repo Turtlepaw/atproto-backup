@@ -42,6 +42,7 @@ import {
   DialogTitle,
   DialogTrigger,
 } from "@/components/ui/dialog";
+import { getCurrentWindow } from "@tauri-apps/api/window";
 
 export function Home({
   profile,
@@ -259,12 +260,13 @@ function Backups({ refreshTrigger }: { refreshTrigger: number }) {
   >({});
   const { agent } = useAuth();
   const contentRefs = useRef<Record<string, HTMLDivElement | null>>({});
+  const appWindow = getCurrentWindow();
 
-  const loadBackups = async () => {
+  const loadBackups = async (silent: boolean = false) => {
     if (agent == null) {
       return;
     }
-    setIsLoading(true);
+    if (!silent) setIsLoading(true);
     try {
       const manager = new BackupAgent(agent);
       const backupsList = await manager.getBackups();
@@ -278,13 +280,21 @@ function Backups({ refreshTrigger }: { refreshTrigger: number }) {
       toast(err.toString());
       console.error(err);
     } finally {
-      setIsLoading(false);
+      if (!silent) setIsLoading(false);
     }
   };
 
   useEffect(() => {
     loadBackups();
-  }, [agent, refreshTrigger]); // Add refreshTrigger to dependencies
+    const unlistenVisible = appWindow.listen("tauri://focus", () => {
+      loadBackups(true);
+    });
+
+    return () => {
+      // Cleanup listeners
+      unlistenVisible.then((unlisten) => unlisten());
+    };
+  }, []);
 
   //@ts-expect-error
   const units: Record<Intl.RelativeTimeFormatUnit, number> = {
