@@ -27,10 +27,12 @@ jobs:
     steps:
       - uses: actions/checkout@v4
 
-      - name: Load release notes
-        id: release_notes
-        run: echo "release_body=$(cat RELEASE_NOTES.md)" >> $GITHUB_OUTPUT
-
+      - name: generate changelog
+        id: changelog
+        run: |
+          echo 'changelog<<EOF' >> $GITHUB_OUTPUT
+          cat RELEASE_NOTES.md >> $GITHUB_OUTPUT
+          echo 'EOF' >> $GITHUB_OUTPUT
       - name: install dependencies (ubuntu only)
         if: matrix.platform == 'ubuntu-22.04' # This must match the platform value defined above.
         run: |
@@ -78,7 +80,7 @@ jobs:
         with:
           tagName: app-v__VERSION__ # the action automatically replaces \_\_VERSION\_\_ with the app version.
           releaseName: "App v__VERSION__"
-          releaseBody: ${{ env.RELEASE_BODY }}
+          releaseBody: ${{ env.changelog }}
           releaseDraft: true
           prerelease: false
           args: ${{ matrix.args }}
