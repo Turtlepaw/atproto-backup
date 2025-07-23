@@ -30,9 +30,8 @@ jobs:
       - name: generate changelog
         id: changelog
         run: |
-          echo 'changelog<<EOF' >> $GITHUB_OUTPUT
-          cat RELEASE_NOTES.md >> $GITHUB_OUTPUT
-          echo 'EOF' >> $GITHUB_OUTPUT
+         notes=$(cat RELEASE_NOTES.md)
+         echo "changelog=$notes" >> $GITHUB_ENV
       - name: install dependencies (ubuntu only)
         if: matrix.platform == 'ubuntu-22.04' # This must match the platform value defined above.
         run: |
