@@ -7,8 +7,10 @@ use tauri_plugin_deep_link::DeepLinkExt;
 
 mod background;
 mod tray;
-use background::{start_background_scheduler, stop_background_scheduler};
+use background::stop_background_scheduler;
 use tray::create_system_tray;
+
+use crate::background::{start_background_scheduler, BackgroundScheduler};
 
 #[tauri::command]
 fn greet(name: &str) -> String {
@@ -18,6 +20,7 @@ fn greet(name: &str) -> String {
 #[cfg_attr(mobile, tauri::mobile_entry_point)]
 pub fn run() {
     let builder = tauri::Builder::default()
+        .plugin(tauri_plugin_log::Builder::new().build())
         .plugin(tauri_plugin_websocket::init())
         .plugin(tauri_plugin_shell::init())
         .plugin(tauri_plugin_process::init())
@@ -37,6 +40,7 @@ pub fn run() {
                        .expect("no main window")
                        .set_focus();
         }))
+        .plugin(tauri_plugin_log::Builder::new().build())
         .invoke_handler(tauri::generate_handler![
             greet,
             start_background_scheduler,

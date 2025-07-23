@@ -1,16 +1,17 @@
+use chrono::{DateTime, Utc};
 use serde::{Deserialize, Serialize};
 use serde_json::json;
 use std::sync::Arc;
 use std::time::{Duration, Instant};
-use tauri::{AppHandle, Emitter};
+use tauri::{App, AppHandle, Emitter, Manager};
 use tauri_plugin_store::StoreExt;
 use tokio::sync::Mutex;
 use tokio::time::sleep;
 
 #[derive(Debug, Clone, Serialize, Deserialize)]
 pub struct BackupSettings {
-    pub frequency: String, // "daily" or "weekly"
-    pub last_backup_date: Option<String>,
+    pub backupFrequency: String, // "daily" or "weekly"
+    pub lastBackupDate: Option<String>,
 }
 
 pub struct BackgroundScheduler {
@@ -35,21 +36,21 @@ impl BackgroundScheduler {
         drop(is_running);
 
         let is_running = self.is_running.clone();
-        let app = self.app.clone(); // <-- assuming it's Arc<App>
+        let app = self.app.clone();
 
         tokio::spawn(async move {
-            let mut last_check = Instant::now();
-
-            while *is_running.lock().await {
-                if last_check.elapsed() >= Duration::from_secs(30 * 60) {
-                    last_check = Instant::now();
-
-                    if let Err(e) = Self::check_and_perform_backup(app.clone()).await {
-                        eprintln!("Background backup check failed: {}", e);
-                    }
+            loop {
+                // Your shared flag
+                if !*is_running.lock().await {
+                    break;
                 }
 
-                sleep(Duration::from_secs(5 * 60)).await;
+                // Use cloned app
+                if let Err(e) = Self::check_and_perform_backup(&app).await {
+                    eprintln!("Background backup check failed: {}", e);
+                }
+
+                sleep(Duration::from_secs(30 * 60)).await;
             }
         });
     }
@@ -59,13 +60,14 @@ impl BackgroundScheduler {
         *is_running = false;
     }
 
-    async fn check_and_perform_backup(app: AppHandle) -> Result<(), Box<dyn std::error::Error>> {
+    async fn check_and_perform_backup(app: &AppHandle) -> Result<(), Box<dyn std::error::Error>> {
+        println!("Background: Checking if backup is needed...");
         // Get settings from store
         let store = app.store("settings.json")?;
         let raw_settings: Option<serde_json::Value> = store.get("settings");
 
         let value = raw_settings.unwrap_or(json!({
-            "frequency": "daily",
+            "backupFrequency": "daily",
             "last_backup_date": null
         }));
 
@@ -76,13 +78,10 @@ impl BackgroundScheduler {
             println!("Background: Backup due, starting backup...");
 
             // Emit event to frontend to perform backup
-            app.emit("perform-backup", ())?;
-
-            // Update last backup date
-            let mut updated_settings = settings;
-            updated_settings.last_backup_date = Some(chrono::Utc::now().to_rfc3339());
-            store.set("settings", json!(updated_settings));
-            store.save()?;
+            match app.emit("perform-backup", serde_json::json!({})) {
+                Ok(_) => println!("Event emitted successfully"),
+                Err(e) => eprintln!("Failed to emit event: {}", e),
+            }
 
             println!("Background: Backup completed");
         }
@@ -93,29 +92,55 @@ impl BackgroundScheduler {
     async fn should_perform_backup(
         settings: &BackupSettings,
     ) -> Result<bool, Box<dyn std::error::Error>> {
-        if settings.last_backup_date.is_none() {
+        println!("[DEBUG] Checking if backup should be performed...");
+
+        if settings.lastBackupDate.is_none() {
+            println!("[DEBUG] No last_backup_date found; should perform backup.");
             return Ok(true);
         }
 
-        let last_backup =
-            chrono::DateTime::parse_from_rfc3339(&settings.last_backup_date.as_ref().unwrap())?;
-        let now = chrono::Utc::now();
+        let last_backup_str = settings.lastBackupDate.as_ref().unwrap();
+        println!("[DEBUG] Last backup date string: {}", last_backup_str);
+
+        let last_backup = DateTime::parse_from_rfc3339(last_backup_str)?;
+        let now = Utc::now();
         let time_diff = now.signed_duration_since(last_backup);
 
-        let required_interval = match settings.frequency.as_str() {
+        println!("[DEBUG] Current time: {}", now);
+        println!("[DEBUG] Last backup time: {}", last_backup);
+        println!(
+            "[DEBUG] Time since last backup: {} seconds",
+            time_diff.num_seconds()
+        );
+
+        let required_interval = match settings.backupFrequency.as_str() {
             "daily" => chrono::Duration::days(1),
             "weekly" => chrono::Duration::weeks(1),
-            _ => chrono::Duration::days(1),
+            other => {
+                println!("[DEBUG] Unknown frequency '{}', defaulting to daily", other);
+                chrono::Duration::days(1)
+            }
         };
+
+        println!(
+            "[DEBUG] Required interval (seconds): {}",
+            required_interval.num_seconds()
+        );
+        println!(
+            "[DEBUG] Should perform backup? {}",
+            time_diff >= required_interval
+        );
 
         Ok(time_diff >= required_interval)
     }
 }
 
 #[tauri::command]
-pub async fn start_background_scheduler(app: AppHandle) {
+pub async fn start_background_scheduler(app: AppHandle) -> Result<(), String> {
+    println!("Starting background scheduler...");
     let scheduler = BackgroundScheduler::new(app);
     scheduler.start().await;
+    Ok(())
 }
 
 #[tauri::command]

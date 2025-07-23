@@ -3,6 +3,8 @@ import { listen } from "@tauri-apps/api/event";
 import { BackupAgent } from "./backup";
 import { settingsManager } from "./settings";
 import { toast } from "sonner";
+import { warn, debug, trace, info, error } from "@tauri-apps/plugin-log";
+import { getCurrentWindow } from "@tauri-apps/api/window";
 
 export class BackgroundBackupService {
   private static instance: BackgroundBackupService;
@@ -20,19 +22,28 @@ export class BackgroundBackupService {
   async initialize(): Promise<void> {
     if (this.isInitialized) return;
 
-    // Start the background scheduler
+    // Listen for backup events from the background scheduler
+    const unlisten = await listen("perform-backup", async () => {
+      console.log("Background backup event received");
+      info("Background backup event received");
+      await this.performBackgroundBackup();
+    });
+
+    const window = getCurrentWindow();
+    const unlistenwb = await window.listen("perform-backup", async () => {
+      console.log("Background backup event received");
+      await this.performBackgroundBackup();
+    });
+
+    console.log("Background backup service initialized");
+
+    //Start the background scheduler
     try {
       await invoke("start_background_scheduler");
       console.log("Background backup scheduler started");
     } catch (error) {
       console.error("Failed to start background scheduler:", error);
     }
-
-    // Listen for backup events from the background scheduler
-    await listen("perform-backup", async () => {
-      console.log("Background backup event received");
-      await this.performBackgroundBackup();
-    });
 
     this.isInitialized = true;
   }
