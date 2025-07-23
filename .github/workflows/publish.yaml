@@ -28,11 +28,12 @@ jobs:
       - uses: actions/checkout@v4
 
       - name: Load release notes
-        id: release_notes
         run: |
-          echo 'RELEASE_BODY<<DELIMITER' >> $GITHUB_ENV
-          cat RELEASE_NOTES.md >> $GITHUB_ENV
-          echo 'DELIMITER' >> $GITHUB_ENV
+          {
+            echo "RELEASE_BODY<<EOF"
+            cat RELEASE_NOTES.md
+            echo "EOF"
+           } >> $GITHUB_ENV
 
       - name: install dependencies (ubuntu only)
         if: matrix.platform == 'ubuntu-22.04' # This must match the platform value defined above.
