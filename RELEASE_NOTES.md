@@ -1,0 +1,3 @@
+- Fix background backups
+- Hide the app in macOS dock ([#3](https://github.com/Turtlepaw/atproto-backup/issues/3))
+- Refresh backups when focused
