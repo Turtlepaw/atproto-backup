@@ -73,7 +73,7 @@ jobs:
             echo 'RELEASE_BODY<<EOF'
             cat RELEASE_NOTES.md
             echo 'EOF'
-          } >> $GITHUB_ENV
+          } >> "$GITHUB_ENV"
 
       - uses: tauri-apps/tauri-action@v0
         env:
