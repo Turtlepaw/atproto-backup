@@ -25,14 +25,14 @@ jobs:
 
     runs-on: ${{ matrix.platform }}
     steps:
+      - uses: actions/checkout@v4
+
       - name: Get version from tag
         id: tag_name
         shell: bash
         run: |
           version=$(jq -r '.version' src-tauri/tauri.conf.json)
           echo "current_version=$version" >> $GITHUB_OUTPUT
-
-      - uses: actions/checkout@v4
 
       - name: Get Changelog Entry
         id: changelog_reader
