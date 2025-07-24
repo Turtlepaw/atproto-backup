@@ -43,7 +43,6 @@ import {
   DialogTrigger,
 } from "@/components/ui/dialog";
 import { getCurrentWindow } from "@tauri-apps/api/window";
-import { appDataDir } from "@tauri-apps/api/path";
 
 export function Home({
   profile,
@@ -296,6 +295,10 @@ function Backups({ refreshTrigger }: { refreshTrigger: number }) {
       unlistenVisible.then((unlisten) => unlisten());
     };
   }, []);
+
+  useEffect(() => {
+    loadBackups(true);
+}, [refreshTrigger]);
 
   //@ts-expect-error
   const units: Record<Intl.RelativeTimeFormatUnit, number> = {
