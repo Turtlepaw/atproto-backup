@@ -25,14 +25,22 @@ jobs:
 
     runs-on: ${{ matrix.platform }}
     steps:
+      - name: Get version from tag
+        id: tag_name
+        shell: bash
+        run: |
+          version=$(jq -r '.version' src-tauri/tauri.conf.json)
+          echo "current_version=$version" >> $GITHUB_OUTPUT
+
       - uses: actions/checkout@v4
 
-      - name: Load release notes
-        id: release_notes
-        run: |
-          echo 'RELEASE_BODY<<DELIMITER' >> $GITHUB_ENV
-          cat RELEASE_NOTES.md >> $GITHUB_ENV
-          echo 'DELIMITER' >> $GITHUB_ENV
+      - name: Get Changelog Entry
+        id: changelog_reader
+        uses: mindsers/changelog-reader-action@v2
+        with:
+          validation_level: warn
+          version: ${{ steps.tag_name.outputs.current_version }}
+          path: ./CHANGELOG.md
 
       - name: install dependencies (ubuntu only)
         if: matrix.platform == 'ubuntu-22.04' # This must match the platform value defined above.
@@ -81,7 +89,7 @@ jobs:
         with:
           tagName: app-v__VERSION__ # the action automatically replaces \_\_VERSION\_\_ with the app version.
           releaseName: "App v__VERSION__"
-          releaseBody: ${{ env.RELEASE_BODY }}
+          releaseBody: ${{ steps.changelog_reader.outputs.changes }}
           releaseDraft: true
           prerelease: false
           args: ${{ matrix.args }}
