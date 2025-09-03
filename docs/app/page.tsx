@@ -3,6 +3,7 @@
 import Image from "next/image";
 import React from "react";
 import { Download, Pause, Play } from "lucide-react";
+import { useThemeConfig } from "nextra-theme-docs";
 
 function getOS(): "windows" | "macos" | "linux" | "unknown" {
   if (typeof window === "undefined") return "unknown";
@@ -44,10 +45,15 @@ export default function Page() {
   const os = useOS();
   const { text } = DOWNLOADS[os];
   const url = "https://github.com/Turtlepaw/atproto-backup/releases/latest";
+  const { darkMode, docsRepositoryBase } = useThemeConfig();
 
   return (
     <div>
-      <div className="flex flex-col md:flex-row items-center justify-center gap-8 min-h-[60vh] p-8 shadow-lg bg-black/70">
+      <div
+        className={`flex flex-col md:flex-row items-center justify-center gap-8 min-h-[60vh] p-8 shadow-lg ${
+          darkMode ? "bg-black" : "bg-white"
+        }/70`}
+      >
         <div>
           <h1 className="text-[2.5rem] font-bold text-white m-0 max-w-[350px] leading-tight">
             One-click local backups of your atproto data
@@ -80,7 +86,7 @@ export default function Page() {
       </div>
       <div className="flex flex-col items-center w-full">
         <div className="w-full h-[0.5px] bg-white/10 mb-4" />
-        <div className="flex flex-col md:flex-row items-center justify-center gap-8 min-h-[60vh] p-8 shadow-lg">
+        <div className="flex flex-col md:flex-row items-center justify-center gap-8 min-h-[60vh] p-8">
           <div>
             <VideoPlayer className="w-lg" />
           </div>
