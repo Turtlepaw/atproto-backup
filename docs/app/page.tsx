@@ -59,8 +59,8 @@ export default function Page() {
             One-click local backups of your atproto data
           </h1>
           <p className="text-lg text-white/80 mt-4 max-w-[350px]">
-            Easily back up your Bluesky posts, likes, follows, and other records
-            to your computer. No cloud required.
+            Easily back up your Bluesky posts, likes, and other records (e.g.
+            other AT Protocol app data) to your computer's filesystem.
           </p>
           <a
             href={url}

@@ -36,6 +36,13 @@ __metadata:
   languageName: node
   linkType: hard
 
+"@catppuccin/tailwindcss@npm:^1.0.0":
+  version: 1.0.0
+  resolution: "@catppuccin/tailwindcss@npm:1.0.0"
+  checksum: 10c0/13dd106828f033f02da1d9037c9c8887810edb858909806c33587f4787d79f4fe68aeb7f8ef7882db33fbba2a20d7777a66b73f6dd420b8691e78e4828335dd1
+  languageName: node
+  linkType: hard
+
 "@chevrotain/cst-dts-gen@npm:11.0.3":
   version: 11.0.3
   resolution: "@chevrotain/cst-dts-gen@npm:11.0.3"
@@ -4944,6 +4951,7 @@ __metadata:
   version: 0.0.0-use.local
   resolution: "root-workspace-0b6124@workspace:."
   dependencies:
+    "@catppuccin/tailwindcss": "npm:^1.0.0"
     "@napi-rs/simple-git": "npm:latest"
     "@tailwindcss/postcss": "npm:^4.1.11"
     "@types/node": "npm:^24.0.10"
