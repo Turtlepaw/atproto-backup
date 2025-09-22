@@ -2,8 +2,14 @@
 
 import Image from "next/image";
 import React from "react";
-import { Download, Pause, Play } from "lucide-react";
+import { Download, Pause, Play, RefreshCcw } from "lucide-react";
 import { useThemeConfig } from "nextra-theme-docs";
+import {
+  Accordion,
+  AccordionContent,
+  AccordionItem,
+  AccordionTrigger,
+} from "@/components/ui/accordion";
 
 function getOS(): "windows" | "macos" | "linux" | "unknown" {
   if (typeof window === "undefined") return "unknown";
@@ -50,7 +56,7 @@ export default function Page() {
   return (
     <div>
       <div
-        className={`flex flex-col md:flex-row items-center justify-center gap-8 min-h-[60vh] p-8 shadow-lg ${
+        className={`flex flex-col md:flex-row items-center justify-center gap-8 min-h-[60vh] p-8 ${
           darkMode ? "bg-black" : "bg-white"
         }/70`}
       >
@@ -64,7 +70,7 @@ export default function Page() {
           </p>
           <a
             href={url}
-            className="mt-6 px-6 py-3 bg-white text-black rounded-md hover:bg-white/90 transition inline-block"
+            className="mt-6 px-6 py-3 bg-white text-black rounded-md hover:bg-white/80 transition-colors inline-block"
             download
           >
             <div className="flex items-center gap-2 font-medium">
@@ -84,8 +90,44 @@ export default function Page() {
           />
         </div>
       </div>
+      <div className="w-full h-[0.5px] bg-white/10 mb-4" />
+      <div className="flex flex-col items-center max-w[800px] mx-auto my-16 px-4 w-full">
+        <Accordion
+          type="single"
+          collapsible
+          className="w-full max-w-2xl flex flex-col gap-4"
+        >
+          <AccordionItem value="item-1">
+            <AccordionTrigger className="flex items-center justify-between gap-2 text-lg font-medium bg-white/5 rounded-md px-4 py-3 cursor-pointer hover:no-underline hover:bg-white/8 transition">
+              <div className="flex items-center gap-4">
+                <RefreshCcw size={20} />
+                <span className="text-left">Unified backup format</span>
+              </div>
+              <span className="ml-auto" />
+            </AccordionTrigger>
+            <AccordionContent className="mt-2 text-gray-300 text-base rounded-md p-4">
+              Your data is saved as a CAR file, which Bluesky uses, and blobs
+              are stored as their original files. This ensures you can restore
+              your data in the future by yourself.
+            </AccordionContent>
+          </AccordionItem>
+          <AccordionItem value="item-2">
+            <AccordionTrigger className="flex items-center justify-between gap-2 text-lg font-medium bg-white/5 rounded-md px-4 py-3 cursor-pointer hover:no-underline hover:bg-white/8 transition">
+              <div className="flex items-center gap-4">
+                <RefreshCcw size={20} />
+                <span className="text-left">Unified backup format</span>
+              </div>
+              <span className="ml-auto" />
+            </AccordionTrigger>
+            <AccordionContent className="mt-2 text-gray-300 text-base rounded-md p-4">
+              Your data is saved as a CAR file, which Bluesky uses, and blobs
+              are stored as their original files. This ensures you can restore
+              your data in the future by yourself.
+            </AccordionContent>
+          </AccordionItem>
+        </Accordion>
+      </div>
       <div className="flex flex-col items-center w-full">
-        <div className="w-full h-[0.5px] bg-white/10 mb-4" />
         <div className="flex flex-col md:flex-row items-center justify-center gap-8 min-h-[60vh] p-8">
           <div>
             <VideoPlayer className="w-lg" />
