@@ -2,7 +2,14 @@
 
 import Image from "next/image";
 import React from "react";
-import { Download, Pause, Play, RefreshCcw } from "lucide-react";
+import {
+  CloudOff,
+  Download,
+  FolderGit2,
+  Pause,
+  Play,
+  RefreshCcw,
+} from "lucide-react";
 import { useThemeConfig } from "nextra-theme-docs";
 import {
   Accordion,
@@ -10,6 +17,12 @@ import {
   AccordionItem,
   AccordionTrigger,
 } from "@/components/ui/accordion";
+
+// Accordion styling constants
+const ACCORDION_TRIGGER_CLASSES =
+  "flex items-center justify-between gap-2 text-lg font-medium bg-black/5 dark:bg-white/5 rounded-md px-4 py-3 cursor-pointer hover:no-underline hover:bg-black/8 dark:hover:bg-white/8 transition";
+const ACCORDION_CONTENT_CLASSES =
+  "mt-2 text-black/75 dark:text-white/75 text-base rounded-md p-4";
 
 function getOS(): "windows" | "macos" | "linux" | "unknown" {
   if (typeof window === "undefined") return "unknown";
@@ -61,16 +74,16 @@ export default function Page() {
         }/70`}
       >
         <div>
-          <h1 className="text-[2.5rem] font-bold text-white m-0 max-w-[350px] leading-tight">
+          <h1 className="text-[2.5rem] font-bold text-black dark:text-white m-0 max-w-[350px] leading-tight">
             One-click local backups of your atproto data
           </h1>
-          <p className="text-lg text-white/80 mt-4 max-w-[350px]">
+          <p className="text-lg text-black/80 dark:text-white/80 mt-4 max-w-[350px]">
             Easily back up your Bluesky posts, likes, and other records (e.g.
             other AT Protocol app data) to your computer's filesystem.
           </p>
           <a
             href={url}
-            className="mt-6 px-6 py-3 bg-white text-black rounded-md hover:bg-white/80 transition-colors inline-block"
+            className="mt-6 px-6 py-3 dark:bg-white bg-black dark:text-black text-white rounded-md hover:bg-black/80 dark:hover:bg-white/80 transition-colors inline-block"
             download
           >
             <div className="flex items-center gap-2 font-medium">
@@ -91,56 +104,89 @@ export default function Page() {
         </div>
       </div>
       <div className="w-full h-[0.5px] bg-white/10 mb-4" />
-      <div className="flex flex-col items-center max-w[800px] mx-auto my-16 px-4 w-full">
-        <Accordion
-          type="single"
-          collapsible
-          className="w-full max-w-2xl flex flex-col gap-4"
-        >
-          <AccordionItem value="item-1">
-            <AccordionTrigger className="flex items-center justify-between gap-2 text-lg font-medium bg-white/5 rounded-md px-4 py-3 cursor-pointer hover:no-underline hover:bg-white/8 transition">
-              <div className="flex items-center gap-4">
-                <RefreshCcw size={20} />
-                <span className="text-left">Unified backup format</span>
-              </div>
-              <span className="ml-auto" />
-            </AccordionTrigger>
-            <AccordionContent className="mt-2 text-gray-300 text-base rounded-md p-4">
-              Your data is saved as a CAR file, which Bluesky uses, and blobs
-              are stored as their original files. This ensures you can restore
-              your data in the future by yourself.
-            </AccordionContent>
-          </AccordionItem>
-          <AccordionItem value="item-2">
-            <AccordionTrigger className="flex items-center justify-between gap-2 text-lg font-medium bg-white/5 rounded-md px-4 py-3 cursor-pointer hover:no-underline hover:bg-white/8 transition">
-              <div className="flex items-center gap-4">
-                <RefreshCcw size={20} />
-                <span className="text-left">Unified backup format</span>
-              </div>
-              <span className="ml-auto" />
-            </AccordionTrigger>
-            <AccordionContent className="mt-2 text-gray-300 text-base rounded-md p-4">
-              Your data is saved as a CAR file, which Bluesky uses, and blobs
-              are stored as their original files. This ensures you can restore
-              your data in the future by yourself.
-            </AccordionContent>
-          </AccordionItem>
-        </Accordion>
-      </div>
+
       <div className="flex flex-col items-center w-full">
         <div className="flex flex-col md:flex-row items-center justify-center gap-8 min-h-[60vh] p-8">
           <div>
             <VideoPlayer className="w-lg" />
           </div>
           <div className="relative mt-8 md:mt-0">
-            <h1 className="text-[2.5rem] font-bold text-white m-0 max-w-[350px] leading-tight">
+            <h1 className="text-[2.5rem] font-bold text-black dark:text-white m-0 max-w-[350px] leading-tight">
               Intuitive and cozy
             </h1>
-            <p className="text-lg text-white/80 mt-4 max-w-[350px]">
+            <p className="text-lg text-black/80 dark:text-white/80 mt-4 max-w-[350px]">
               See how easy it is to save your Bluesky data to your computer.
             </p>
           </div>
         </div>
+      </div>
+      <div className="flex flex-col items-center max-w[800px] mx-auto my-16 px-4 w-full">
+        <Accordion
+          type="single"
+          collapsible
+          className="w-full max-w-2xl flex flex-col gap-4"
+        >
+          <AccordionItem value="item-1" className="border-none">
+            <AccordionTrigger className={ACCORDION_TRIGGER_CLASSES}>
+              <div className="flex items-center gap-4">
+                <RefreshCcw size={20} />
+                <span className="text-left">Unified backup format</span>
+              </div>
+              <span className="ml-auto" />
+            </AccordionTrigger>
+            <AccordionContent className={ACCORDION_CONTENT_CLASSES}>
+              Your data is saved as a CAR file, which Bluesky uses, and blobs
+              are stored as their original format (in blob files). This ensures
+              you can restore your data in the future by yourself.
+            </AccordionContent>
+          </AccordionItem>
+          <AccordionItem value="item-2" className="border-none">
+            <AccordionTrigger className={ACCORDION_TRIGGER_CLASSES}>
+              <div className="flex items-center gap-4">
+                <CloudOff size={20} />
+                <span className="text-left">Local only</span>
+              </div>
+              <span className="ml-auto" />
+            </AccordionTrigger>
+            <AccordionContent className={ACCORDION_CONTENT_CLASSES}>
+              Your backups are saved directly to your computer's file system, in
+              documents, ensuring you always have access. If you prefer cloud
+              storage, you can tools like{" "}
+              <a
+                href="https://bsky.storage"
+                className="text-blue-500 underline"
+              >
+                Storacha
+              </a>.
+            </AccordionContent>
+          </AccordionItem>
+          <AccordionItem value="item-3">
+            <AccordionTrigger className={ACCORDION_TRIGGER_CLASSES}>
+              <div className="flex items-center gap-4">
+                <FolderGit2 size={20} />
+                <span className="text-left">Open-source</span>
+              </div>
+              <span className="ml-auto" />
+            </AccordionTrigger>
+            <AccordionContent className={ACCORDION_CONTENT_CLASSES}>
+              We're completly open-source, star us on{" "}
+              <a
+                href="https://github.com/Turtlepaw/atproto-backup"
+                className="text-blue-500 underline"
+              >
+                GitHub
+              </a>{" "}
+              or{" "}
+              <a
+                href="https://tangled.org/did:plc:5fzwpxt3rctfetyqpbigvgic/atbackup"
+                className="text-blue-500 underline"
+              >
+                Tangled
+              </a>. We're also happy to merge your pull request! (mention us on
+              Bluesky if we're a little slow)
+            </AccordionContent>
+          </AccordionItem>
+        </Accordion>
       </div>
     </div>
   );

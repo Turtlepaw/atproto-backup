@@ -6,6 +6,7 @@ import "./app.css";
 import Image from "next/image";
 import Link from "next/link";
 import { Metadata } from "next";
+import { Bluesky, Tangled } from "@/components/icons";
 
 export const metadata: Metadata = {
   description: "One-click backup for Bluesky",
@@ -53,20 +54,24 @@ const footer = (
   <Footer>
     <div className="flex items-center justify-between w-full">
       <span />
-      <Link
-        href="https://bsky.app/profile/atbackup.pages.dev"
-        className="hover:opacity-80 transition-opacity"
-        target="_blank"
-        rel="noopener noreferrer"
-      >
-        <Image
-          src="/bsky.svg"
-          alt="Bluesky"
-          width={24}
-          height={24}
-          color="white"
-        />
-      </Link>
+      <div className="flex flex-row gap-2">
+        <Link
+          href="https://bsky.app/profile/atbackup.pages.dev"
+          className="hover:opacity-70 transition-opacity"
+          target="_blank"
+          rel="noopener noreferrer"
+        >
+          <Tangled className="w-6 h-6 text-black dark:text-white" />
+        </Link>
+        <Link
+          href="https://bsky.app/profile/atbackup.pages.dev"
+          className="hover:opacity-70 transition-opacity"
+          target="_blank"
+          rel="noopener noreferrer"
+        >
+          <Bluesky className="w-6 h-6 text-black dark:text-white" />
+        </Link>
+      </div>
     </div>
   </Footer>
 );
@@ -84,7 +89,7 @@ export default async function RootLayout({
       suppressHydrationWarning
     >
       <Head
-      // ... Your additional head options
+        // ... Your additional head options
       >
         {/* Your additional tags should be passed as `children` of `<Head>` element */}
       </Head>
