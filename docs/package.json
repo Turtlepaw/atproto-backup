@@ -28,7 +28,8 @@
     "@types/node": "^24.0.10",
     "@types/react": "^19.1.8",
     "pagefind": "^1.3.0",
-    "tw-animate-css": "^1.3.8"
+    "tw-animate-css": "^1.3.8",
+    "typescript": "^5.9.2"
   },
   "packageManager": "yarn@4.9.4"
 }
