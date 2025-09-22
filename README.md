@@ -1,9 +1,20 @@
 <div align="center">
 <img src="./images/atbackup_large.png"/>
-
-<h1>AT Backup</h1>
-<p>One-click local Bluesky/ATProto backups</p>
 </div>
+
+## Features
+
+- Local first: saved to your file system
+- Standard format: backups are stored as CAR files, which Bluesky uses
+- Backup overview: see your backup's size and record types
+
+## Contributing
+
+We're welcome to any and all contributions. Mention us on Bluesky if we're slow, we may have missed your PR!
+
+## Forking
+
+You have our blessing and encouragement to fork this project and we're excited to see what you build!
 
 ## Built with
 
@@ -12,7 +23,3 @@
 - ATProto
 - atcute (for CAR file parsing)
 - shadcn UI
-
-## Recommended IDE Setup
-
-- [VS Code](https://code.visualstudio.com/) + [Tauri](https://marketplace.visualstudio.com/items?itemName=tauri-apps.tauri-vscode) + [rust-analyzer](https://marketplace.visualstudio.com/items?itemName=rust-lang.rust-analyzer)
