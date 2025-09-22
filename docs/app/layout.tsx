@@ -56,7 +56,7 @@ const footer = (
       <span />
       <div className="flex flex-row gap-2">
         <Link
-          href="https://bsky.app/profile/atbackup.pages.dev"
+          href="https://tangled.org/did:plc:5fzwpxt3rctfetyqpbigvgic/atbackup"
           className="hover:opacity-70 transition-opacity"
           target="_blank"
           rel="noopener noreferrer"
