@@ -12,21 +12,28 @@ function LoadingSpinner() {
 
 function AuthCompleteContent() {
   const [loading, setLoading] = React.useState(true);
-  // Get all parameters from the URL
-  const currentUrl = new URL(window.location.href);
-  const params = new URLSearchParams(currentUrl.search);
+  const [redirectUrl, setRedirectUrl] = React.useState("");
 
-  params.forEach((value, key) => {
-    console.log(key, "=", value);
-  });
-
-  // Construct the redirect URL preserving all parameters
-  const redirectUrl = `atprotobackups://auth${
-    currentUrl.search || "?" + currentUrl.hash.slice(1)
-  }`;
   useEffect(() => {
+    // Only run on client side
+    if (typeof window === "undefined") return;
+
+    // Get all parameters from the URL
+    const currentUrl = new URL(window.location.href);
+    const params = new URLSearchParams(currentUrl.search);
+
+    params.forEach((value, key) => {
+      console.log(key, "=", value);
+    });
+
+    // Construct the redirect URL preserving all parameters
+    const url = `atprotobackups://auth${
+      currentUrl.search || "?" + currentUrl.hash.slice(1)
+    }`;
+    setRedirectUrl(url);
+
     // Open the URL in the system's default handler and close the window after a short delay
-    window.location.href = redirectUrl;
+    window.location.href = url;
 
     // Close the window after a short delay to ensure the protocol handler is triggered
     setTimeout(() => {
