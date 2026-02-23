@@ -118,6 +118,11 @@ export default function LoginPage({
             placeholder="example.bsky.social"
             value={identifier}
             onChange={(e) => setIdentifier(e.target.value)}
+            onKeyDown={(e) => {
+              if (e.key === "Enter") {
+                handleLogin();
+              }
+            }}
           />
           {error && <p className="text-sm text-red-500">{error}</p>}
           <Button

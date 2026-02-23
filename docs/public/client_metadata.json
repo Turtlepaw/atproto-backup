@@ -12,7 +12,7 @@
         "authorization_code",
         "refresh_token"
     ],
-    "scope": "atproto transition:generic",
+    "scope": "atproto",
     "response_types": [
         "code"
     ],
