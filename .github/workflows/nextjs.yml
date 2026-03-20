@@ -51,13 +51,13 @@ jobs:
             echo "Unable to determine package manager"
             exit 1
           fi
+      - name: Enable Corepack
+        run: corepack enable
       - name: Setup Node
         uses: actions/setup-node@v4
         with:
           node-version: "20"
           cache: ${{ steps.detect-package-manager.outputs.manager }}
-      - name: Enable Corepack
-        run: corepack enable
       - name: Setup Pages
         uses: actions/configure-pages@v5
         with:
