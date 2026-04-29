@@ -143,13 +143,12 @@
 
 .titlebar {
   height: 40px;
-  background: rgba(0, 0, 0, 0.5);
+  background: var(--background);
   backdrop-filter: blur(100px);
   user-select: none;
-  display: flex;
-  justify-content: flex-end;
   align-items: center;
   position: fixed;
+  display: flex;
   top: 0;
   left: 0;
   right: 0;
@@ -161,7 +160,7 @@
   height: 100%;
 }
 
-.titlebar button {
+/* .titlebar button {
   all: unset;
   display: flex;
   justify-content: center;
@@ -177,7 +176,7 @@
 
 .titlebar button:hover {
   background: rgba(255, 255, 255, 0.1);
-}
+} */
 
 .titlebar .material-symbols-rounded {
   font-size: 18px;

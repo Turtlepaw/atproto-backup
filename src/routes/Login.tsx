@@ -1,98 +1,27 @@
-import { useState, useEffect, useRef } from "react";
+import { useState } from "react";
 import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
-import { onOpenUrl } from "@tauri-apps/plugin-deep-link";
 import { openUrl } from "@tauri-apps/plugin-opener";
-import { OAuthClient, type OAuthSession } from "@atproto/oauth-client";
 import { SquareArrowOutUpRight } from "lucide-react";
-import { enable } from "@tauri-apps/plugin-autostart";
+import { normalizeAccountIdentifier, useAccounts } from "@/Accounts";
 
-interface LoginPageProps {
-  onLogin: (session: OAuthSession) => void;
-  client: OAuthClient | null;
-}
-
-export default function LoginPage({
-  onLogin,
-  client: oauthClient,
-}: LoginPageProps) {
+export default function LoginPage() {
   const [identifier, setIdentifier] = useState("");
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState("");
-  const processingOAuthRef = useRef(false);
-
-  // Initialize OAuth client
-  useEffect(() => {
-    const initOAuthClient = async () => {
-      try {
-        console.log("waiting for deep links");
-        // Set up deep link handler
-        await onOpenUrl(async (urls) => {
-          console.log("deep link received:", urls);
-          if (!oauthClient || urls.length === 0) return;
-
-          // Prevent duplicate processing
-          if (processingOAuthRef.current) {
-            console.log(
-              "Already processing OAuth callback, ignoring duplicate"
-            );
-            return;
-          }
-
-          try {
-            processingOAuthRef.current = true;
-            // Get the first URL from the array and parse it
-            const url = new URL(urls[0]);
-
-            console.log("OAuth callback URL:", url.searchParams.entries);
-            // Process the OAuth callback with the URLSearchParams directly
-            const session = await oauthClient.callback(url.searchParams);
-            console.log("OAuth callback successful!", session);
-            enable();
-            onLogin(session.session);
-            setLoading(false);
-          } catch (err) {
-            console.error("Failed to process OAuth callback:", err);
-            setError("Failed to complete OAuth login");
-            setLoading(false);
-          } finally {
-            processingOAuthRef.current = false;
-          }
-        });
-      } catch (err) {
-        console.error("Failed to initialize OAuth client:", err);
-      }
-    };
-    initOAuthClient();
-  }, [onLogin, oauthClient]);
+  const { addAccount } = useAccounts();
 
   const handleLogin = async () => {
-    if (!oauthClient) {
-      setError("OAuth client not initialized");
-      return;
-    }
-
     setLoading(true);
     setError("");
-
     try {
-      // For ATProto OAuth, we need to use the user's handle/identifier
-      if (!identifier) {
-        setError("Please enter your handle or identifier");
-        return;
-      }
-
-      const url = await oauthClient.authorize(identifier, {
-        scope: "atproto transition:generic",
-        ui_locales: "en",
-        signal: new AbortController().signal,
-      });
-
-      await openUrl(url);
-    } catch (err: any) {
-      console.error(err);
-      setError(err.message || "OAuth login failed");
+      const account = await normalizeAccountIdentifier(identifier);
+      await addAccount(account);
+    } catch (err) {
+      console.error("Login failed:", err);
+      setError("Login failed: " + (err instanceof Error ? err.message : String(err)));
+    } finally {
       setLoading(false);
     }
   };
@@ -110,12 +39,12 @@ export default function LoginPage({
       <Card className="w-full max-w-sm bg-black/50 backdrop-blur-md">
         <CardHeader>
           <CardTitle className="cursor-default">
-            Login with your handle on the Atmosphere
+            Add your Atmosphere account
           </CardTitle>
         </CardHeader>
         <CardContent className="space-y-4">
           <Input
-            placeholder="example.bsky.social"
+            placeholder="example.com"
             value={identifier}
             onChange={(e) => setIdentifier(e.target.value)}
             onKeyDown={(e) => {
@@ -128,7 +57,7 @@ export default function LoginPage({
           <Button
             className="w-full cursor-pointer"
             onClick={handleLogin}
-            disabled={loading || !identifier || !oauthClient}
+            disabled={loading || !identifier}
           >
             {loading ? "Logging in..." : "Login"}
           </Button>

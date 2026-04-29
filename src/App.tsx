@@ -27,10 +27,29 @@ import {
 } from "@/components/ui/dialog";
 import { Progress } from "./components/ui/progress";
 import { MarkdownRenderer } from "./components/ui/markdown-renderer";
+import { AccountsProvider, useAccounts } from "./Accounts";
+
+function ToolbarButton({
+  children,
+  onClick,
+  destructive = false,
+}: {
+  children: React.ReactNode;
+  onClick: () => void;
+  destructive?: boolean;
+}) {
+  return (
+    <button onClick={onClick} className={`cursor-pointer flex items-center justify-center ${destructive ? "hover:bg-red-500 transition-colors" : "hover:bg-white/10"}`}>
+      <div className="p-3 opacity-80 [&>*]:w-4 [&>*]:h-4">{children}</div>
+    </button>
+  );
+}
+
 
 function AppContent() {
-  const { isLoading, isAuthenticated, profile, client, login, logout, agent } =
-    useAuth();
+  // const { isLoading, isAuthenticated, profile, client, login, logout, agent } =
+  //   useAuth();
+  const { accounts, isLoading } = useAccounts();
   const appWindow = getCurrentWindow();
 
   const [isLocalStorageReady, setIsLocalStorageReady] = useState(false);
@@ -53,14 +72,14 @@ function AppContent() {
 
   // Background backup service initialization
   useEffect(() => {
-    if (!isAuthenticated || !agent) return;
+    if (accounts.length === 0) return;
 
     const backgroundService = BackgroundBackupService.getInstance();
     backgroundService.initialize();
 
     // Listen for background backup requests
     const handleBackgroundBackupRequest = () => {
-      handleBackgroundBackup(agent);
+      handleBackgroundBackup();
     };
 
     window.addEventListener(
@@ -75,74 +94,7 @@ function AppContent() {
       );
       backgroundService.stop();
     };
-  }, [isAuthenticated, agent]);
-
-  // Auto-backup functionality (for when app is open)
-  // useEffect(() => {
-  //   if (!isAuthenticated || !agent) return;
-
-  //   let intervalId: ReturnType<typeof setInterval> | null = null;
-
-  //   const checkAndPerformBackup = async () => {
-  //     try {
-  //       const lastBackupDate = await settingsManager.getLastBackupDate();
-  //       const frequency = await settingsManager.getBackupFrequency();
-
-  //       if (!lastBackupDate) {
-  //         // No previous backup, so we should do one
-  //         await performBackup();
-  //         return;
-  //       }
-
-  //       const lastBackup = new Date(lastBackupDate);
-  //       const now = new Date();
-  //       const timeDiff = now.getTime() - lastBackup.getTime();
-
-  //       if (frequency === "daily") {
-  //         // Check if 24 hours have passed
-  //         const oneDay = 24 * 60 * 60 * 1000;
-  //         if (timeDiff >= oneDay) {
-  //           await performBackup();
-  //         }
-  //       } else if (frequency === "weekly") {
-  //         // Check if 7 days have passed
-  //         const oneWeek = 7 * 24 * 60 * 60 * 1000;
-  //         if (timeDiff >= oneWeek) {
-  //           await performBackup();
-  //         }
-  //       }
-  //     } catch (error) {
-  //       console.error("Error in automatic backup check:", error);
-  //     }
-  //   };
-
-  //   const performBackup = async () => {
-  //     try {
-  //       console.log("Automatic backup due, starting backup...");
-  //       const manager = new BackupAgent(agent);
-  //       await manager.startBackup();
-
-  //       // Update the last backup date
-  //       await settingsManager.setLastBackupDate(new Date().toISOString());
-
-  //       console.log("Automatic backup completed successfully");
-  //     } catch (error) {
-  //       console.error("Automatic backup failed:", error);
-  //     }
-  //   };
-
-  //   // Check immediately when authenticated
-  //   checkAndPerformBackup();
-
-  //   // Set up interval to check every hour
-  //   intervalId = setInterval(checkAndPerformBackup, 60 * 60 * 1000);
-
-  //   return () => {
-  //     if (intervalId) {
-  //       clearInterval(intervalId);
-  //     }
-  //   };
-  // }, [isAuthenticated, agent]);
+  }, [accounts]);
 
   useEffect(() => {
     const checkUpdates = async () => {
@@ -171,11 +123,9 @@ function AppContent() {
   return (
     <>
       <div className="titlebar hide-scroll" data-tauri-drag-region>
-        <div className="controls pr-[4px]">
-          <Button
-            variant="ghost"
-            id="titlebar-minimize"
-            title="minimize"
+        <div className="title ml-4 text-sm opacity-90">ATProto Backup</div>
+        <div className="ml-auto flex">
+          <ToolbarButton
             onClick={() => {
               appWindow.minimize();
             }}
@@ -188,10 +138,8 @@ function AppContent() {
             >
               <path fill="currentColor" d="M19 13H5v-2h14z" />
             </svg>
-          </Button>
-          <Button
-            id="titlebar-maximize"
-            title="maximize"
+          </ToolbarButton>
+          <ToolbarButton
             onClick={() => {
               appWindow.toggleMaximize();
             }}
@@ -204,13 +152,12 @@ function AppContent() {
             >
               <path fill="currentColor" d="M4 4h16v16H4zm2 4v10h12V8z" />
             </svg>
-          </Button>
-          <Button
-            id="titlebar-close"
-            title="close"
+          </ToolbarButton>
+          <ToolbarButton
             onClick={() => {
               appWindow.hide();
             }}
+            destructive
           >
             <svg
               xmlns="http://www.w3.org/2000/svg"
@@ -223,7 +170,7 @@ function AppContent() {
                 d="M13.46 12L19 17.54V19h-1.46L12 13.46L6.46 19H5v-1.46L10.54 12L5 6.46V5h1.46L12 10.54L17.54 5H19v1.46z"
               />
             </svg>
-          </Button>
+          </ToolbarButton>
         </div>
       </div>
       <div className="flex flex-col h-screen overflow-hidden">
@@ -304,10 +251,10 @@ function AppContent() {
               <div className="fixed inset-0 flex items-center justify-center">
                 <LoaderCircleIcon className="animate-spin text-white/80" />
               </div>
-            ) : isAuthenticated ? (
-              <Home profile={profile!!} onLogout={logout} />
+            ) : accounts.length > 0 ? (
+              <Home />
             ) : (
-              <LoginPage onLogin={login} client={client} />
+              <LoginPage />
             )}
           </ScrollArea>
 
@@ -321,9 +268,9 @@ function AppContent() {
 function App() {
   return (
     <ThemeProvider defaultTheme="dark" storageKey="vite-ui-theme">
-      <AuthProvider>
+      <AccountsProvider>
         <AppContent />
-      </AuthProvider>
+      </AccountsProvider>
     </ThemeProvider>
   );
 }

@@ -19,6 +19,53 @@ class SettingsManager {
     return this.store;
   }
 
+  async getAccounts(): Promise<string[]> {
+    try {
+      const store = await this.getStore();
+      const accounts = (await store.get("accounts")) as string[] | null;
+      return accounts || [];
+    } catch (error) {
+      console.error("Failed to load accounts:", error);
+      return [];
+    }
+  }
+
+  async addAccount(account: string): Promise<void> {
+    try {
+      const accounts = await this.getAccounts();
+      if (!accounts.includes(account)) {
+        accounts.push(account);
+        const store = await this.getStore();
+        await store.set("accounts", accounts);
+      }
+    } catch (error) {
+      console.error("Failed to add account:", error);
+      throw error;
+    }
+  }
+
+  async setAccounts(accounts: string[]): Promise<void> {
+    try {
+      const store = await this.getStore();
+      await store.set("accounts", Array.from(new Set(accounts)));
+    } catch (error) {
+      console.error("Failed to set accounts:", error);
+      throw error;
+    }
+  }
+
+  async removeAccount(account: string): Promise<void> {
+    try {
+      const accounts = await this.getAccounts();
+      const updatedAccounts = accounts.filter((acc) => acc !== account);
+      const store = await this.getStore();
+      await store.set("accounts", updatedAccounts);
+    } catch (error) {
+      console.error("Failed to remove account:", error);
+      throw error;
+    }
+  }
+
   async getSettings(): Promise<AppSettings> {
     try {
       const store = await this.getStore();

@@ -9,7 +9,7 @@ export class BackgroundBackupService {
   private static instance: BackgroundBackupService;
   private isInitialized = false;
 
-  private constructor() {}
+  private constructor() { }
 
   static getInstance(): BackgroundBackupService {
     if (!BackgroundBackupService.instance) {
@@ -71,11 +71,11 @@ export class BackgroundBackupService {
 }
 
 // Export a function to handle background backup requests
-export async function handleBackgroundBackup(agent: any): Promise<void> {
+export async function handleBackgroundBackup(): Promise<void> {
   try {
     console.log("Performing background backup...");
 
-    const manager = new BackupAgent(agent);
+    const manager = new BackupAgent();
     await manager.startBackup();
 
     // Update the last backup date

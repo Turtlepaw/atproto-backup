@@ -1,15 +1,9 @@
-import { Agent } from "@atproto/api";
 import { BackupAgent } from "./backup";
 import { settingsManager } from "./settings";
 
 export class AutoBackupScheduler {
-  private agent: Agent;
-  private intervalId: NodeJS.Timeout | null = null;
+  private intervalId: number | null = null;
   private isRunning = false;
-
-  constructor(agent: Agent) {
-    this.agent = agent;
-  }
 
   start(): void {
     if (this.isRunning) return;
@@ -78,7 +72,7 @@ export class AutoBackupScheduler {
 
   private async performBackup(): Promise<void> {
     try {
-      const manager = new BackupAgent(this.agent);
+      const manager = new BackupAgent();
       await manager.startBackup();
 
       // Update the last backup date

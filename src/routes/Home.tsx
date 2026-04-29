@@ -1,5 +1,10 @@
-import { useAuth } from "@/Auth";
-import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
+import {
+  Avatar,
+  AvatarFallback,
+  AvatarGroup,
+  AvatarGroupCount,
+  AvatarImage,
+} from "@/components/ui/avatar"
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import {
@@ -12,7 +17,6 @@ import { Progress } from "@/components/ui/progress";
 import { BackupAgent, BackupStage, Metadata } from "@/lib/backup";
 import { createBackupDir, getBackupDir } from "@/lib/paths";
 import { settingsManager } from "@/lib/settings";
-import { ProfileViewDetailed } from "@atproto/api/dist/client/types/app/bsky/actor/defs";
 import { openPath, openUrl } from "@tauri-apps/plugin-opener";
 import {
   ChevronDown,
@@ -24,10 +28,13 @@ import {
   Images,
   LoaderCircleIcon,
   Package,
+  PlusIcon,
   Settings as SettingsIcon,
   SquareArrowOutUpRight,
   User,
+  UserCircle,
   Users,
+  XIcon,
 } from "lucide-react";
 import { useEffect, useRef, useState } from "react";
 import { toast } from "sonner";
@@ -43,16 +50,17 @@ import {
   DialogTrigger,
 } from "@/components/ui/dialog";
 import { getCurrentWindow } from "@tauri-apps/api/window";
+import { resolveHandle, useAccounts } from "@/Accounts";
+import { Input } from "@/components/ui/input";
 
-export function Home({
-  profile,
-  onLogout,
-}: {
-  profile: ProfileViewDetailed;
-  onLogout: () => void;
-}) {
+export function Home() {
   const [refreshTrigger, setRefreshTrigger] = useState(0);
   const [showSettings, setShowSettings] = useState(false);
+  const { accounts, profiles, removeAccount, addAccount } = useAccounts();
+  const [showAddAccount, setShowAddAccount] = useState(false);
+  const [accountHandle, setAccountHandle] = useState("");
+  const [error, setError] = useState("");
+  const [isLoading, setIsLoading] = useState(false);
 
   const handleBackupComplete = () => {
     setRefreshTrigger((prev) => prev + 1);
@@ -64,29 +72,135 @@ export function Home({
 
   return (
     <div className="p-4 mt-10">
+      <Dialog
+        open={showAddAccount}
+        onOpenChange={() => setShowAddAccount(false)}
+      >
+        {/* <DialogTrigger>Open</DialogTrigger> */}
+        <DialogContent>
+          <DialogHeader>
+            <DialogTitle>
+              Add account
+            </DialogTitle>
+            <DialogDescription>
+              <Input
+                placeholder="example.com"
+                value={accountHandle}
+                onChange={(e) => setAccountHandle(e.target.value)}
+                className="mt-3"
+              />
+              {error && <p className="text-sm text-red-500 mt-2">{error}</p>}
+            </DialogDescription>
+            <DialogFooter className="mt-4">
+              <DialogClose asChild className="cursor-pointer">
+                <Button variant="outline">Cancel</Button>
+              </DialogClose>
+              <Button
+                className="cursor-pointer"
+                onClick={async () => {
+                  if (accountHandle.trim() === "") {
+                    setError("Please enter an account handle");
+                    return;
+                  }
+                  try {
+                    setError("");
+                    setIsLoading(true);
+                    const did = await resolveHandle(accountHandle);
+                    await addAccount(did);
+                    setShowAddAccount(false);
+                    setAccountHandle("");
+                    toast("Account added successfully");
+                  } catch (err) {
+                    console.error("Failed to add account:", err);
+                    setError(
+                      "Failed to add account: " +
+                      (err instanceof Error ? err.message : String(err))
+                    );
+                  } finally {
+                    setIsLoading(false);
+                  }
+                }}
+              >
+                {isLoading ? <LoaderCircleIcon className="w-4 h-4 animate-spin" /> : <PlusIcon className="w-4 h-4" />}
+                Add
+              </Button>
+            </DialogFooter>
+          </DialogHeader>
+        </DialogContent>
+      </Dialog>
       <div className="flex justify-between items-center mb-4">
         <div>
           <DropdownMenu>
             <DropdownMenuTrigger asChild>
               <div className="flex flex-row items-center gap-2 cursor-pointer p-2 rounded-md transition-colors hover:bg-white/10">
-                <Avatar>
-                  <AvatarImage src={profile.avatar} />
-                  <AvatarFallback>
-                    {profile.displayName ?? profile.handle}
-                  </AvatarFallback>
-                </Avatar>
+                <AvatarGroup>
+                  {accounts.length === 0 ? (
+                    <Avatar className="size-7">
+                      <AvatarFallback>
+                        <UserCircle className="w-4 h-4" />
+                      </AvatarFallback>
+                    </Avatar>
+                  ) : (
+                    accounts.slice(0, 3).map((did) => {
+                      const profile = profiles.get(did);
+                      return (
+                        <Avatar key={did} className="size-7">
+                          <AvatarImage
+                            src={profile?.avatar}
+                            alt={profile?.displayName || did}
+                          />
+                          <AvatarFallback>
+                            {profile?.displayName?.[0] || did[0]}
+                          </AvatarFallback>
+                        </Avatar>
+                      );
+                    })
+                  )}
+                  {accounts.length > 3 && (
+                    <AvatarGroupCount>
+                      +{accounts.length - 3}
+                    </AvatarGroupCount>
+                  )}
+                </AvatarGroup>
                 <span className="text-white">
-                  {profile.displayName ?? `@${profile.handle}`}
+                  My accounts
                 </span>
               </div>
             </DropdownMenuTrigger>
 
             <DropdownMenuContent className="ml-3">
+              {accounts.map((did) => {
+                const profile = profiles.get(did);
+
+                return (
+                  <DropdownMenuItem
+                    key={did}
+                    onClick={() => removeAccount(did)}
+                    className="cursor-pointer"
+                  >
+                    <Avatar className="size-7 mr-2">
+                      <AvatarImage
+                        src={profile?.avatar}
+                        alt={profile?.displayName || did}
+                      />
+                      <AvatarFallback>
+                        {profile?.displayName?.[0] || did[0]}
+                      </AvatarFallback>
+                    </Avatar>
+                    <div>
+                      <span>{profile?.displayName || did}</span>
+                      <p className="text-xs text-white/60">{did}</p>
+                    </div>
+                    <XIcon className="ml-auto" />
+                  </DropdownMenuItem>
+                );
+              })}
               <DropdownMenuItem
-                onClick={onLogout}
-                className="cursor-pointer text-red-500"
+                onClick={() => setShowAddAccount(true)}
+                className="cursor-pointer text-sm"
               >
-                Log out
+                <PlusIcon className="size-5 mr-3" />
+                Add account
               </DropdownMenuItem>
             </DropdownMenuContent>
           </DropdownMenu>
@@ -120,7 +234,6 @@ function StartBackup({ onBackupComplete }: { onBackupComplete: () => void }) {
   const [stage, setStage] = useState<BackupStage | null>(null);
   const [progress, setProgress] = useState<number | undefined>();
   const [isDirLoading, setDirLoading] = useState(false);
-  const { agent } = useAuth();
 
   const formatStage = (stage: BackupStage | null): string => {
     if (!stage) return "Initializing backup...";
@@ -173,12 +286,8 @@ function StartBackup({ onBackupComplete }: { onBackupComplete: () => void }) {
           onClick={async () => {
             try {
               setIsLoading(true);
-              if (agent == null) {
-                toast("Agent not initialized, try to reload the app.");
-                return;
-              }
 
-              const manager = new BackupAgent(agent!!, {
+              const manager = new BackupAgent({
                 onProgress: (progress) => {
                   setStage(progress.stage);
                   setProgress(progress.progress);
@@ -258,17 +367,13 @@ function Backups({ refreshTrigger }: { refreshTrigger: number }) {
   const [showCollections, setShowCollections] = useState<
     Record<string, boolean>
   >({});
-  const { agent } = useAuth();
   const contentRefs = useRef<Record<string, HTMLDivElement | null>>({});
   const appWindow = getCurrentWindow();
 
   const loadBackups = async (silent: boolean = false) => {
-    if (agent == null) {
-      return;
-    }
     if (!silent) setIsLoading(true);
     try {
-      const manager = new BackupAgent(agent);
+      const manager = new BackupAgent();
       const backupsList = await manager.getBackups();
       // Sort backups by timestamp (newest first)
       const sortedBackups = backupsList.sort(
@@ -298,7 +403,7 @@ function Backups({ refreshTrigger }: { refreshTrigger: number }) {
 
   useEffect(() => {
     loadBackups(true);
-}, [refreshTrigger]);
+  }, [refreshTrigger]);
 
   //@ts-expect-error
   const units: Record<Intl.RelativeTimeFormatUnit, number> = {
@@ -390,9 +495,8 @@ function Backups({ refreshTrigger }: { refreshTrigger: number }) {
                       </div>
                     </div>
                     <div
-                      className={`transition-transform duration-300 ${
-                        expanded ? "rotate-180" : "rotate-0"
-                      }`}
+                      className={`transition-transform duration-300 ${expanded ? "rotate-180" : "rotate-0"
+                        }`}
                     >
                       <ChevronDown className="w-5 h-5 text-white/60" />
                     </div>
@@ -448,9 +552,8 @@ function Backups({ refreshTrigger }: { refreshTrigger: number }) {
                   style={{
                     maxHeight:
                       expanded && contentRefs.current[backup.filePath]
-                        ? `${
-                            contentRefs.current[backup.filePath]!.scrollHeight
-                          }px`
+                        ? `${contentRefs.current[backup.filePath]!.scrollHeight
+                        }px`
                         : 0,
                     opacity: expanded ? 1 : 0,
                     transition:
