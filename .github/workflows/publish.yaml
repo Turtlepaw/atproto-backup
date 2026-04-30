@@ -84,6 +84,12 @@ jobs:
         # If you don't have `beforeBuildCommand` configured you may want to build your frontend here too.
         run: yarn install --immutable
 
+      - name: Enable Corepack for tauri-action
+        shell: bash
+        run: |
+          corepack enable
+          corepack prepare yarn@4.13.0 --activate
+
       - uses: tauri-apps/tauri-action@v0
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
