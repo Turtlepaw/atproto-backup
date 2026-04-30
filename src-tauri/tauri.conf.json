@@ -4,9 +4,9 @@
   "version": "0.1.4",
   "identifier": "ATBackup",
   "build": {
-    "beforeDevCommand": "bun run dev",
+    "beforeDevCommand": "yarn dev",
     "devUrl": "http://localhost:1420",
-    "beforeBuildCommand": "bun run build",
+    "beforeBuildCommand": "yarn build",
     "frontendDist": "../dist"
   },
   "app": {
@@ -26,12 +26,7 @@
   },
   "bundle": {
     "active": true,
-    "targets": [
-      "deb",
-      "rpm",
-      "msi",
-      "dmg"
-    ],
+    "targets": ["deb", "rpm", "msi", "dmg"],
     "linux": {
       "rpm": {
         "compression": {
@@ -55,9 +50,7 @@
   "plugins": {
     "deep-link": {
       "desktop": {
-        "schemes": [
-          "atprotobackups"
-        ]
+        "schemes": ["atprotobackups"]
       }
     },
     "updater": {
