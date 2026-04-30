@@ -54,6 +54,11 @@ jobs:
           node-version: lts/*
           cache: "yarn"
 
+      - name: Enable Corepack
+        run: |
+          corepack enable
+          corepack prepare yarn@4.13.0 --activate
+
       - name: install Rust stable
         uses: dtolnay/rust-toolchain@stable # Set this to dtolnay/rust-toolchain@nightly
         with:
