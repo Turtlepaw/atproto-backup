@@ -15,3 +15,14 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 ### Fixed
 
 - Background backups
+
+## [0.1.5]
+
+### Added
+
+- Multiple accounts: you can now add multiple accounts to the app!
+
+### Changed
+
+- You no longer need to authenticate with your PDS to add an account to back up.
+- Incremental blob download: backups now only download new blobs since the last backup, instead of downloading all blobs every time.
