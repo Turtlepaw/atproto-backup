@@ -4,6 +4,7 @@ import { BaseDirectory, join, resolve } from "@tauri-apps/api/path";
 import {
   mkdir,
   readDir,
+  readFile,
   readTextFile,
   writeFile,
   remove,
@@ -47,7 +48,7 @@ export interface ProgressInfo {
   progress?: number; // 0-100 percentage
   current?: number;
   total?: number;
-  accountDid?: string;
+  accountDid: string;
   accountHandle?: string;
 }
 
@@ -352,47 +353,80 @@ export class BackupAgent {
         return;
       }
 
-      console.log(`Downloading ${blobRefs.length} blobs...`);
+      console.log(`Processing ${blobRefs.length} blobs...`);
       let downloadedCount = 0;
+      let copiedCount = 0;
+
+      // Build a map of existing blobs from previous backups
+      const existingBlobsMap = await this.findExistingBlobs(did);
 
       for (let i = 0; i < blobRefs.length; i++) {
         const blobRef = blobRefs[i];
         const progress = 50 + Math.round((i / blobRefs.length) * 30); // 50-80% range
 
-        this.reportProgress({
-          stage: "blobs",
-          message: `Downloading blob ${i + 1} of ${blobRefs.length} for ${handle || did}...`,
-          progress,
-          current: i + 1,
-          total: blobRefs.length,
-          accountDid: did,
-          accountHandle: handle,
-        });
+        // Check if blob already exists from a previous backup
+        if (existingBlobsMap.has(blobRef)) {
+          const existingBlobPath = existingBlobsMap.get(blobRef)!;
 
-        try {
-          const blobData = await agent.com.atproto.sync.getBlob({
-            did: metadata.did,
-            cid: blobRef,
+          this.reportProgress({
+            stage: "blobs",
+            message: `Copying existing blob ${i + 1} of ${blobRefs.length} for ${handle || did}...`,
+            progress,
+            current: i + 1,
+            total: blobRefs.length,
+            accountDid: did,
+            accountHandle: handle,
           });
 
-          const blobPath = await join(blobDir, `${blobRef}.blob`);
-          await writeFile(blobPath, blobData.data);
-          downloadedCount++;
+          try {
+            // Copy existing blob instead of downloading
+            const blobData = await readFile(existingBlobPath);
+            const blobPath = await join(blobDir, `${blobRef}.blob`);
+            await writeFile(blobPath, blobData);
 
-          // Optional: Save blob metadata
-          const blobMetadata = {
-            cid: blobRef,
-            size: blobData.data.length,
-            downloadedAt: new Date().toISOString(),
-          };
+            // Copy metadata if it exists
+            const existingMetadataPath = existingBlobPath.replace(/\.blob$/, ".json");
+            try {
+              const blobMetadata = await readTextFile(existingMetadataPath);
+              const blobMetadataPath = await join(blobDir, `${blobRef}.json`);
+              await writeFile(
+                blobMetadataPath,
+                new TextEncoder().encode(blobMetadata)
+              );
+            } catch (e) {
+              // Metadata might not exist, which is fine
+            }
 
-          const blobMetadataPath = await join(blobDir, `${blobRef}.json`);
-          await writeFile(
-            blobMetadataPath,
-            new TextEncoder().encode(JSON.stringify(blobMetadata, null, 2))
+            copiedCount++;
+            console.log(`Copied blob ${blobRef} from previous backup`);
+          } catch (error) {
+            console.error(`Failed to copy blob ${blobRef}:`, error);
+            // Fall through to download if copy fails
+            downloadedCount += await this.downloadSingleBlob(
+              agent,
+              blobRef,
+              blobDir,
+              metadata.did
+            );
+          }
+        } else {
+          // Blob doesn't exist, download it
+          this.reportProgress({
+            stage: "blobs",
+            message: `Downloading blob ${i + 1} of ${blobRefs.length} for ${handle || did}...`,
+            progress,
+            current: i + 1,
+            total: blobRefs.length,
+            accountDid: did,
+            accountHandle: handle,
+          });
+
+          downloadedCount += await this.downloadSingleBlob(
+            agent,
+            blobRef,
+            blobDir,
+            metadata.did
           );
-        } catch (error) {
-          console.error(`Failed to download blob ${blobRef}:`, error);
         }
       }
 
@@ -400,7 +434,7 @@ export class BackupAgent {
       const updatedMetadata = {
         ...metadata,
         blobsPath: blobDir,
-        blobCount: downloadedCount,
+        blobCount: downloadedCount + copiedCount,
       };
 
       const metadataPath = await join(backupDir, "metadata.json");
@@ -411,17 +445,104 @@ export class BackupAgent {
 
       this.reportProgress({
         stage: "blobs",
-        message: `Downloaded ${downloadedCount}/${blobRefs.length} blobs for ${handle || did}`,
+        message: `Processed ${downloadedCount + copiedCount}/${blobRefs.length} blobs (${downloadedCount} downloaded, ${copiedCount} copied from cache) for ${handle || did}`,
         progress: 80,
         accountDid: did,
         accountHandle: handle,
       });
 
-      console.log(`Downloaded ${downloadedCount}/${blobRefs.length} blobs`);
+      console.log(
+        `Processed ${downloadedCount + copiedCount}/${blobRefs.length} blobs (${downloadedCount} downloaded, ${copiedCount} from cache)`
+      );
     } catch (error) {
-      console.error("Failed to download blobs:", error);
-      // Don't throw - blob download failure shouldn't fail the entire backup
+      console.error("Failed to process blobs:", error);
+      // Don't throw - blob processing failure shouldn't fail the entire backup
     }
+  }
+
+  private async downloadSingleBlob(
+    agent: Agent,
+    blobRef: string,
+    blobDir: string,
+    did: string
+  ): Promise<number> {
+    try {
+      const blobData = await agent.com.atproto.sync.getBlob({
+        did,
+        cid: blobRef,
+      });
+
+      const blobPath = await join(blobDir, `${blobRef}.blob`);
+      await writeFile(blobPath, blobData.data);
+
+      // Save blob metadata
+      const blobMetadata = {
+        cid: blobRef,
+        size: blobData.data.length,
+        downloadedAt: new Date().toISOString(),
+      };
+
+      const blobMetadataPath = await join(blobDir, `${blobRef}.json`);
+      await writeFile(
+        blobMetadataPath,
+        new TextEncoder().encode(JSON.stringify(blobMetadata, null, 2))
+      );
+
+      return 1;
+    } catch (error) {
+      console.error(`Failed to download blob ${blobRef}:`, error);
+      return 0;
+    }
+  }
+
+  private async findExistingBlobs(
+    did: string
+  ): Promise<Map<string, string>> {
+    const existingBlobs = new Map<string, string>();
+
+    try {
+      const backupDir = await getBackupDir();
+      const sanitizedDid = sanitizeDidForPath(did);
+      const accountBackupDir = await join(backupDir, sanitizedDid);
+
+      // Check if account backup directory exists
+      const dirExists = await exists(accountBackupDir, {
+        baseDir: BaseDirectory.Document,
+      });
+      if (!dirExists) return existingBlobs;
+
+      // List all backup directories for this account
+      const backupDirs = await readDir(accountBackupDir);
+
+      for (const backupEntry of backupDirs) {
+        if (!backupEntry.isDirectory) continue;
+
+        // Look for blobs directory in each backup
+        const blobsDirPath = await join(accountBackupDir, backupEntry.name, "blobs");
+        const blobsDirExists = await exists(blobsDirPath, {
+          baseDir: BaseDirectory.Document,
+        });
+
+        if (!blobsDirExists) continue;
+
+        // Index all .blob files in this backup
+        const blobFiles = await readDir(blobsDirPath);
+        for (const blobFile of blobFiles) {
+          if (blobFile.name.endsWith(".blob")) {
+            const cid = blobFile.name.replace(".blob", "");
+            const blobFilePath = await join(blobsDirPath, blobFile.name);
+            // Store the full path to the blob
+            existingBlobs.set(cid, blobFilePath);
+          }
+        }
+      }
+
+      console.log(`Found ${existingBlobs.size} existing blobs for reuse`);
+    } catch (error) {
+      console.error("Failed to scan for existing blobs:", error);
+    }
+
+    return existingBlobs;
   }
 
   private async extractBlobReferences(

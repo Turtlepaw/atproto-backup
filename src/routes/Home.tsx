@@ -19,6 +19,7 @@ import { createBackupDir, getBackupDir } from "@/lib/paths";
 import { settingsManager } from "@/lib/settings";
 import { openPath, openUrl } from "@tauri-apps/plugin-opener";
 import {
+  Check,
   ChevronDown,
   FileText,
   FolderOpen,
@@ -221,7 +222,7 @@ export function Home() {
 
       <div className="bg-card rounded-lg p-4 mb-4">
         <p className="mb-2 text-white">Backups</p>
-        <StartBackup onBackupComplete={handleBackupComplete} />
+        <StartBackup onBackupComplete={handleBackupComplete} accounts={profiles} />
       </div>
 
       <Backups refreshTrigger={refreshTrigger} />
@@ -229,9 +230,10 @@ export function Home() {
   );
 }
 
-function StartBackup({ onBackupComplete }: { onBackupComplete: () => void }) {
+function StartBackup({ onBackupComplete, accounts: accountData }: { onBackupComplete: () => void; accounts: Map<string, { displayName?: string; avatar?: string }> }) {
   const [isLoading, setIsLoading] = useState(false);
   const [stage, setStage] = useState<BackupStage | null>(null);
+  const [accounts, setAccounts] = useState<Map<string, BackupStage | null>>(new Map());
   const [progress, setProgress] = useState<number | undefined>();
   const [isDirLoading, setDirLoading] = useState(false);
 
@@ -287,14 +289,25 @@ function StartBackup({ onBackupComplete }: { onBackupComplete: () => void }) {
             try {
               setIsLoading(true);
 
+              const dids = await settingsManager.getAccounts()
+              setAccounts(
+                new Map(dids.map(did => [did, null]))
+              )
+              console.log("Starting backup for accounts:", dids, accounts);
+
               const manager = new BackupAgent({
                 onProgress: (progress) => {
                   setStage(progress.stage);
                   setProgress(progress.progress);
+                  setAccounts(
+                    (prev) => new Map(prev).set(progress.accountDid, progress.stage)
+                  );
                 },
               });
-              await manager.startBackup();
+              await manager.backupAllAccounts();
               await settingsManager.setLastBackupDate(new Date().toISOString());
+              // wait for 10s
+              await new Promise((resolve) => setTimeout(resolve, 50000));
               toast("Backup complete!");
               onBackupComplete();
             } catch (err: any) {
@@ -321,16 +334,41 @@ function StartBackup({ onBackupComplete }: { onBackupComplete: () => void }) {
 
       {/* Clean backup progress card with animations */}
       {isLoading && (
-        <div className="bg-card border rounded-lg p-4 animate-in slide-in-from-top-2 duration-300">
+        <div className="bg-card border rounded-lg p-4 w-full animate-in slide-in-from-top-2 duration-300">
           <div className="flex items-center justify-between mb-3">
             <div className="flex items-center gap-3">
-              <div className="w-8 h-8 rounded-md bg-primary/10 flex items-center justify-center">
+              <div className="w-8 h-8 rounded-md bg-primary/10 flex items-center justify-center flex-shrink-0">
                 <HardDrive className="w-4 h-4 text-primary animate-pulse" />
               </div>
               <div>
                 <h3 className="font-medium">{formatStage(stage)}</h3>
               </div>
             </div>
+          </div>
+
+          <div className="space-y-2 mb-3">
+            {[...accounts.entries()].map(([did, stage]) => (
+              <div key={did} className="flex items-center gap-2 min-h-6">
+                <div className="w-5 h-5 flex items-center justify-center flex-shrink-0">
+                  {stage === "complete" ? (
+                    <Check className="w-4 h-4 text-green-500" />
+                  ) : stage != null ? (
+                    <LoaderCircleIcon className="w-4 h-4 animate-spin text-white/60" />
+                  ) : (
+                    <Avatar className="size-4">
+                      <AvatarImage
+                        src={accountData.get(did)?.avatar}
+                        alt={accountData.get(did)?.displayName || did}
+                      />
+                      <AvatarFallback>
+                        {accountData.get(did)?.displayName?.[0] || did[0]}
+                      </AvatarFallback>
+                    </Avatar>
+                  )}
+                </div>
+                <span className="text-sm truncate">{did}</span>
+              </div>
+            ))}
           </div>
 
           <div className="space-y-1.5">

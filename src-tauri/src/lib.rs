@@ -10,7 +10,7 @@ mod tray;
 use background::stop_background_scheduler;
 use tray::create_system_tray;
 
-use crate::background::{start_background_scheduler, BackgroundScheduler};
+use crate::background::start_background_scheduler;
 
 #[tauri::command]
 fn greet(name: &str) -> String {
@@ -33,14 +33,13 @@ pub fn run() {
         .plugin(tauri_plugin_store::Builder::new().build())
         .plugin(tauri_plugin_deep_link::init())
         .plugin(tauri_plugin_opener::init())
-                .plugin(tauri_plugin_single_instance::init(|app, argv, cwd| {
+                .plugin(tauri_plugin_single_instance::init(|app, argv, _cwd| {
             println!("A new app instance was opened with {argv:?} and the deep link event was already triggered.");
 
                         let _ = app.get_webview_window("main")
                        .expect("no main window")
                        .set_focus();
         }))
-        .plugin(tauri_plugin_log::Builder::new().build())
         .invoke_handler(tauri::generate_handler![
             greet,
             start_background_scheduler,
@@ -94,7 +93,7 @@ pub fn run() {
             #[cfg(target_os = "macos")]
             app.set_activation_policy(tauri::ActivationPolicy::Accessory);
 
-            let tray = create_system_tray(app);
+            let _tray = create_system_tray(app)?;
 
             Ok(())
         });

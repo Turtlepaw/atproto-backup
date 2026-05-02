@@ -2,16 +2,18 @@ use chrono::{DateTime, Utc};
 use serde::{Deserialize, Serialize};
 use serde_json::json;
 use std::sync::Arc;
-use std::time::{Duration, Instant};
-use tauri::{App, AppHandle, Emitter, Manager};
+use std::time::Duration;
+use tauri::{AppHandle, Emitter};
 use tauri_plugin_store::StoreExt;
 use tokio::sync::Mutex;
 use tokio::time::sleep;
 
 #[derive(Debug, Clone, Serialize, Deserialize)]
 pub struct BackupSettings {
-    pub backupFrequency: String, // "daily" or "weekly"
-    pub lastBackupDate: Option<String>,
+    #[serde(rename = "backupFrequency", alias = "backup_frequency")]
+    pub backup_frequency: String, // "daily" or "weekly"
+    #[serde(rename = "lastBackupDate", alias = "last_backup_date")]
+    pub last_backup_date: Option<String>,
 }
 
 pub struct BackgroundScheduler {
@@ -55,6 +57,7 @@ impl BackgroundScheduler {
         });
     }
 
+    #[allow(dead_code)]
     pub async fn stop(&self) {
         let mut is_running = self.is_running.lock().await;
         *is_running = false;
@@ -94,12 +97,12 @@ impl BackgroundScheduler {
     ) -> Result<bool, Box<dyn std::error::Error>> {
         println!("[DEBUG] Checking if backup should be performed...");
 
-        if settings.lastBackupDate.is_none() {
+        if settings.last_backup_date.is_none() {
             println!("[DEBUG] No last_backup_date found; should perform backup.");
             return Ok(true);
         }
 
-        let last_backup_str = settings.lastBackupDate.as_ref().unwrap();
+        let last_backup_str = settings.last_backup_date.as_ref().unwrap();
         println!("[DEBUG] Last backup date string: {}", last_backup_str);
 
         let last_backup = DateTime::parse_from_rfc3339(last_backup_str)?;
@@ -113,7 +116,7 @@ impl BackgroundScheduler {
             time_diff.num_seconds()
         );
 
-        let required_interval = match settings.backupFrequency.as_str() {
+        let required_interval = match settings.backup_frequency.as_str() {
             "daily" => chrono::Duration::days(1),
             "weekly" => chrono::Duration::weeks(1),
             other => {

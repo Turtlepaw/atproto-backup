@@ -9,7 +9,7 @@ pub fn create_system_tray(app: &tauri::App) -> Result<TrayIcon, tauri::Error> {
     let hide_i = MenuItem::with_id(app, "hide", "Hide", true, None::<&str>)?;
     let backup_now_i = MenuItem::with_id(app, "backup_now", "Backup Now", true, None::<&str>)?;
 
-    let menu = Menu::with_items(app, &[&quit_i, &show_i, &backup_now_i])?;
+    let menu = Menu::with_items(app, &[&quit_i, &show_i, &hide_i, &backup_now_i])?;
 
     TrayIconBuilder::new()
         .menu(&menu)
