@@ -1,4 +1,4 @@
-import { Store } from "@tauri-apps/plugin-store";
+import { load, Store } from '@tauri-apps/plugin-store';
 
 export interface AppSettings {
   backupFrequency: "daily" | "weekly";
@@ -14,7 +14,12 @@ class SettingsManager {
 
   private async getStore(): Promise<Store> {
     if (!this.store) {
-      this.store = await Store.load("settings.json", { autoSave: true });
+      this.store = await load("settings.json", {
+        autoSave: true, defaults: {
+          accounts: [],
+          settings: DEFAULT_SETTINGS,
+        }
+      });
     }
     return this.store;
   }

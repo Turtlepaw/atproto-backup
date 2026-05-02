@@ -4,7 +4,6 @@ import { Button } from "./components/ui/button";
 import LoginPage from "./routes/Login";
 import { getCurrentWindow } from "@tauri-apps/api/window";
 import { LoaderCircleIcon } from "lucide-react";
-import { AuthProvider, useAuth } from "./Auth";
 import { initializeLocalStorage } from "./localstorage_ployfill";
 import { Home } from "./routes/Home";
 import { ThemeProvider } from "./theme-provider";

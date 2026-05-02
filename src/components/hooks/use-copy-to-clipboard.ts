@@ -11,7 +11,7 @@ export function useCopyToClipboard({
   copyMessage = "Copied to clipboard!",
 }: UseCopyToClipboardProps) {
   const [isCopied, setIsCopied] = useState(false);
-  const timeoutRef = useRef<NodeJS.Timeout | null>(null);
+  const timeoutRef = useRef<number | null>(null);
 
   const handleCopy = useCallback(() => {
     navigator.clipboard
