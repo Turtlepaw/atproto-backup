@@ -27,17 +27,17 @@
     "@radix-ui/react-switch": "^1.2.5",
     "@radix-ui/react-tooltip": "^1.2.7",
     "@tailwindcss/vite": "^4.1.11",
-    "@tauri-apps/api": "^2.6.0",
-    "@tauri-apps/plugin-autostart": "~2.5.0",
-    "@tauri-apps/plugin-deep-link": "~2.4.0",
-    "@tauri-apps/plugin-fs": "~2.5.0",
-    "@tauri-apps/plugin-log": "~2",
-    "@tauri-apps/plugin-opener": "^2.4.0",
-    "@tauri-apps/plugin-process": "~2.3.0",
-    "@tauri-apps/plugin-shell": "~2.3.0",
-    "@tauri-apps/plugin-store": "~2.4.2",
-    "@tauri-apps/plugin-updater": "~2.10.1",
-    "@tauri-apps/plugin-websocket": "~2.4.0",
+    "@tauri-apps/api": "^2.12.0",
+    "@tauri-apps/plugin-autostart": "~2.7.0",
+    "@tauri-apps/plugin-deep-link": "~2.6.0",
+    "@tauri-apps/plugin-fs": "~2.7.0",
+    "@tauri-apps/plugin-log": "~2.10.0",
+    "@tauri-apps/plugin-opener": "~2.7.0",
+    "@tauri-apps/plugin-process": "~2.4.0",
+    "@tauri-apps/plugin-shell": "~2.5.0",
+    "@tauri-apps/plugin-store": "~2.5.0",
+    "@tauri-apps/plugin-updater": "~2.14.0",
+    "@tauri-apps/plugin-websocket": "~2.5.0",
     "antd": "^6.3.7",
     "class-variance-authority": "^0.7.1",
     "clsx": "^2.1.1",
@@ -70,5 +70,5 @@
   "trustedDependencies": [
     "@tailwindcss/oxide"
   ],
-  "packageManager": "yarn@4.14.1"
+  "packageManager": "yarn@4.18.1"
 }
