@@ -33,3 +33,8 @@ dist-ssr
 docs/node_modules
 docs/.next
 docs/public/_pagefind
+
+# Nix
+result
+result-*
+.direnv
