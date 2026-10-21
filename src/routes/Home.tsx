@@ -15,10 +15,11 @@ import {
 } from "@/components/ui/dropdown-menu";
 import { Progress } from "@/components/ui/progress";
 import { BackupAgent, BackupStage, Metadata } from "@/lib/backup";
-import { createBackupDir, getBackupDir } from "@/lib/paths";
+import { checkDocumentDir, createBackupDir, getBackupDir } from "@/lib/paths";
 import { settingsManager } from "@/lib/settings";
 import { openPath, openUrl } from "@tauri-apps/plugin-opener";
 import {
+  AlertCircle,
   Check,
   ChevronDown,
   FileText,
@@ -62,6 +63,31 @@ export function Home() {
   const [accountHandle, setAccountHandle] = useState("");
   const [error, setError] = useState("");
   const [isLoading, setIsLoading] = useState(false);
+  const [docDirError, setDocDirError] = useState<string | null>(null);
+
+  useEffect(() => {
+    const verifyDocumentDir = async () => {
+      try {
+        const customDir = await settingsManager.getBackupDirectory();
+        if (!customDir || customDir.trim() === "") {
+          const { exists, error } = await checkDocumentDir();
+          if (!exists) {
+            const msg = error || "Document directory does not exist.";
+            setDocDirError(msg);
+            toast.error(msg, {
+              description: "Please select where to save backups in Settings.",
+            });
+            return;
+          }
+        }
+        setDocDirError(null);
+      } catch (err: any) {
+        console.error("Error verifying document directory:", err);
+      }
+    };
+
+    verifyDocumentDir();
+  }, [refreshTrigger, showSettings]);
 
   const handleBackupComplete = () => {
     setRefreshTrigger((prev) => prev + 1);
@@ -220,6 +246,28 @@ export function Home() {
       {/* <TestAutoBackup /> */}
       {/* <BackgroundTest /> */}
 
+      {docDirError && (
+        <div className="bg-red-500/10 border border-red-500/30 text-red-400 p-3.5 rounded-lg mb-4 flex items-center justify-between">
+          <div className="flex items-center gap-3">
+            <AlertCircle className="w-5 h-5 flex-shrink-0 text-red-400" />
+            <div>
+              <p className="font-semibold text-sm">{docDirError}</p>
+              <p className="text-xs text-red-300/80">
+                Please select where to save backups in Settings.
+              </p>
+            </div>
+          </div>
+          <Button
+            variant="outline"
+            size="sm"
+            onClick={() => setShowSettings(true)}
+            className="cursor-pointer border-red-500/40 text-red-200 hover:bg-red-500/20 text-xs shrink-0"
+          >
+            Open Settings
+          </Button>
+        </div>
+      )}
+
       <div className="bg-card rounded-lg p-4 mb-4">
         <p className="mb-2 text-white">Backups</p>
         <StartBackup onBackupComplete={handleBackupComplete} accounts={profiles} />
@@ -311,7 +359,7 @@ function StartBackup({ onBackupComplete, accounts: accountData }: { onBackupComp
               toast("Backup complete!");
               onBackupComplete();
             } catch (err: any) {
-              toast(err.toString());
+              toast.error(err.message || err.toString());
               console.error(err);
             } finally {
               setIsLoading(false);
@@ -420,7 +468,7 @@ function Backups({ refreshTrigger }: { refreshTrigger: number }) {
       );
       setBackups(sortedBackups);
     } catch (err: any) {
-      toast(err.toString());
+      toast.error(err.message || err.toString());
       console.error(err);
     } finally {
       if (!silent) setIsLoading(false);

@@ -17,6 +17,16 @@ fn greet(name: &str) -> String {
     format!("Hello, {}! You've been greeted from Rust!", name)
 }
 
+#[tauri::command]
+async fn select_backup_directory(default_path: Option<String>) -> Result<Option<String>, String> {
+    let mut dialog = rfd::AsyncFileDialog::new().set_title("Select Backup Directory");
+    if let Some(ref path) = default_path {
+        dialog = dialog.set_directory(path);
+    }
+    let folder = dialog.pick_folder().await;
+    Ok(folder.map(|f| f.path().to_string_lossy().to_string()))
+}
+
 #[cfg_attr(mobile, tauri::mobile_entry_point)]
 pub fn run() {
     let builder = tauri::Builder::default()
@@ -33,17 +43,18 @@ pub fn run() {
         .plugin(tauri_plugin_store::Builder::new().build())
         .plugin(tauri_plugin_deep_link::init())
         .plugin(tauri_plugin_opener::init())
-                .plugin(tauri_plugin_single_instance::init(|app, argv, _cwd| {
+        .plugin(tauri_plugin_single_instance::init(|app, argv, _cwd| {
             println!("A new app instance was opened with {argv:?} and the deep link event was already triggered.");
 
-                        let _ = app.get_webview_window("main")
-                       .expect("no main window")
-                       .set_focus();
+            let _ = app.get_webview_window("main")
+                .expect("no main window")
+                .set_focus();
         }))
         .invoke_handler(tauri::generate_handler![
             greet,
             start_background_scheduler,
-            stop_background_scheduler
+            stop_background_scheduler,
+            select_backup_directory
         ])
         .on_menu_event(|app, event| match event.id.as_ref() {
             "quit" => {

@@ -3,6 +3,7 @@ import { load, Store } from '@tauri-apps/plugin-store';
 export interface AppSettings {
   backupFrequency: "daily" | "weekly";
   lastBackupDate?: string; // ISO string
+  backupDirectory?: string; // Custom directory path where backups are stored
 }
 
 const DEFAULT_SETTINGS: AppSettings = {
@@ -110,6 +111,15 @@ class SettingsManager {
   async getBackupFrequency(): Promise<"daily" | "weekly"> {
     const settings = await this.getSettings();
     return settings.backupFrequency;
+  }
+
+  async getBackupDirectory(): Promise<string | undefined> {
+    const settings = await this.getSettings();
+    return settings.backupDirectory;
+  }
+
+  async setBackupDirectory(directory?: string): Promise<void> {
+    await this.updateSettings({ backupDirectory: directory });
   }
 }
 

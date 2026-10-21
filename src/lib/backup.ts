@@ -1,6 +1,6 @@
 import { Agent } from "@atproto/api";
 import { createBackupDir, getBackupDir } from "./paths";
-import { BaseDirectory, join, resolve } from "@tauri-apps/api/path";
+import { join, resolve } from "@tauri-apps/api/path";
 import {
   mkdir,
   readDir,
@@ -257,9 +257,7 @@ export class BackupAgent {
       // Create account-specific directory using sanitized DID
       const sanitizedDid = sanitizeDidForPath(did);
       const accountBackupDir = await join(backupDir, sanitizedDid);
-      const dirExists = await exists(accountBackupDir, {
-        baseDir: BaseDirectory.Document,
-      });
+      const dirExists = await exists(accountBackupDir);
       if (!dirExists) {
         await mkdir(accountBackupDir);
       }
@@ -506,9 +504,7 @@ export class BackupAgent {
       const accountBackupDir = await join(backupDir, sanitizedDid);
 
       // Check if account backup directory exists
-      const dirExists = await exists(accountBackupDir, {
-        baseDir: BaseDirectory.Document,
-      });
+      const dirExists = await exists(accountBackupDir);
       if (!dirExists) return existingBlobs;
 
       // List all backup directories for this account
@@ -519,9 +515,7 @@ export class BackupAgent {
 
         // Look for blobs directory in each backup
         const blobsDirPath = await join(accountBackupDir, backupEntry.name, "blobs");
-        const blobsDirExists = await exists(blobsDirPath, {
-          baseDir: BaseDirectory.Document,
-        });
+        const blobsDirExists = await exists(blobsDirPath);
 
         if (!blobsDirExists) continue;
 
